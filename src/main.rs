@@ -25,10 +25,10 @@ fn main() {
         &Default::default(),
     );
 
-    let mut queue = EventQueue::new();
+    let mut event_queue = EventQueue::new();
     let mut renderer = SimpleRenderer::new();
     let mut resource_manager = ResourceManager::new();
-    let mut gui = Gui::new(&mut queue);
+    let mut gui = Gui::new(&mut event_queue);
 
     println!("All systems initialized.");
     let mut elapsed = Instant::now();
@@ -37,12 +37,13 @@ fn main() {
         let dt = Instant::now().duration_since(elapsed).as_secs_f32();
         elapsed = Instant::now();
 
-        process_input(&mut window, &mut queue);
-        queue.process_events();
+        process_input(&mut window, &mut event_queue);
 
+        gui.update(dt, &mut event_queue);
         renderer.begin(&mut window);
         gui.draw(dt, &mut window);
         renderer.end(&mut window);
+        event_queue.new_frame();
     }
     
 }
