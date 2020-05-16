@@ -1,10 +1,8 @@
 use crate::rendering::Renderer;
 use sfml::graphics::{
-    Color, Drawable, RectangleShape, RenderStates, RenderTarget, RenderWindow,
-    Shape, Transformable, Text, Sprite,
+    Color, RenderTarget, RenderWindow,
+    Shape, Text, Sprite,
 };
-use sfml::window::{Event, Key, Style, VideoMode};
-
 
 pub struct SimpleRenderer {
 }

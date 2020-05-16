@@ -2,16 +2,19 @@ mod events;
 mod input;
 mod rendering;
 mod resources;
-use events::*;
-use std::sync::{Arc, Mutex};
-use input::process_input;
-use rendering::*;
-use resources::*;
-use sfml::window::Style;
-use std::path::Path;
-use sfml::graphics::{RenderWindow, Texture, Sprite};
+mod gui;
 
 extern crate sfml;
+extern crate rlua;
+
+use std::time::{Duration, Instant};
+use events::{EventQueue, Event};
+use input::process_input;
+use rendering::{SimpleRenderer, Renderer};
+use resources::ResourceManager;
+use gui::Gui;
+use sfml::window::Style;
+use sfml::graphics::RenderWindow;
 
 fn main() {
 
@@ -25,23 +28,20 @@ fn main() {
     let mut queue = EventQueue::new();
     let mut renderer = SimpleRenderer::new();
     let mut resource_manager = ResourceManager::new();
-    // let handler = Arc::new(Mutex::new(EventHandler::new()));
-    // &*handler.lock().unwrap()
-    //     .bind(EventType::Test, |e| println!("Event handled: {:?}", e))
-    //     .bind(EventType::Input, |e| println!("Input event handled: {:?}", e));
-    // queue.register(&handler, EventType::Test);
-    // queue.post(Event::new(EventType::Test, EventData::Test("fuck".to_string())));
-    // queue.post(Event::new(EventType::Input, EventData::Mouse(0)));
-    // queue.process_events();
-    let tex_arc = resource_manager.get_texture("elminster_single.png");
-    let mut sprite = Sprite::new();
-    sprite.set_texture(&**tex_arc, false);
+    let mut gui = Gui::new(&mut queue);
+
     println!("All systems initialized.");
+    let mut elapsed = Instant::now();
+    
     while window.is_open() {
+        let dt = Instant::now().duration_since(elapsed).as_secs_f32();
+        elapsed = Instant::now();
+
         process_input(&mut window, &mut queue);
         queue.process_events();
+
         renderer.begin(&mut window);
-        renderer.draw_sprite(&mut window, &sprite);
+        gui.draw(dt, &mut window);
         renderer.end(&mut window);
     }
     
