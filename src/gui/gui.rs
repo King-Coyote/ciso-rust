@@ -3,18 +3,30 @@ use crate::events::*;
 use crate::gui::Widget;
 use crate::gui::Panel;
 use crate::rendering::*;
+use crate::util::*;
+use crate::resources::ResourceManager;
+use crate::scripting::Scripting;
 use std::sync::{Arc, Mutex};
 use std::vec::Vec;
 
 pub struct Gui<T: Renderer + 'static> {
     root_widgets: Vec<Box<dyn Widget<R = T>>>,
+    scripting: Shared<Scripting>,
+    resource_manager: Shared<ResourceManager>,
 }
 
 impl<T: Renderer> Gui<T> {
-    pub fn new(event_queue: &mut EventQueue) -> Self {
-        let gui = Gui {
+    pub fn new(
+        event_queue: &mut EventQueue, 
+        scripting: Shared<Scripting>,
+        resource_manager: Shared<ResourceManager>
+    ) -> Self {
+        let mut gui = Gui {
             root_widgets: vec!(),
+            scripting: scripting,
+            resource_manager: resource_manager
         };
+        gui.add_widget("kunt");
         return gui;
     }
 
@@ -41,7 +53,6 @@ impl<T: Renderer> Gui<T> {
     }
 
     fn handle_event_input(&mut self, event: &mut Event) {
-        println!("Gui handled event: {:?}", event);
         for widget in self.root_widgets.iter_mut() {
             widget.handle_event(event);
         }

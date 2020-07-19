@@ -4,21 +4,30 @@ mod rendering;
 mod resources;
 mod gui;
 mod game;
+mod scripting;
+mod util;
 
 extern crate sfml;
 extern crate rlua;
 
-use std::time::{Duration, Instant};
-use events::{EventQueue, Event};
-use input::process_input;
+use std::{
+    sync::{Arc, Mutex,},
+    time::{Instant,}
+};
+use events::{EventQueue,};
 use rendering::{SimpleWindow, Renderer};
 use resources::ResourceManager;
 use game::Game;
 use gui::Gui;
+use scripting::Scripting;
 use sfml::window::Style;
 use sfml::graphics::RenderWindow;
+use util::*;
+use rlua::prelude::*;
+use rlua::{Function, Lua, MetaMethod, Result, UserData, UserDataMethods, Variadic};
 
-fn main() {
+
+fn main() -> Result<()> {
     let mut event_queue = EventQueue::new();
     let mut window = SimpleWindow::new(
         RenderWindow::new(
@@ -27,10 +36,13 @@ fn main() {
             Style::CLOSE,
             &Default::default(),
         )
-    );
-    let mut resource_manager = ResourceManager::new();
-    let mut gui = Gui::new(&mut event_queue);
-    let mut game = Game::new();
+    ); 
+    let resource_manager = shared(ResourceManager::new());
+    let scripting = shared(Scripting::new());
+    let mut gui = Gui::new(&mut event_queue, scripting.clone(), resource_manager.clone());
+    let mut game = Game::new(scripting.clone(), resource_manager.clone());
+    game.test_script1();
+    game.test_script2()?;
 
     println!("All systems initialized.");
     let mut elapsed = Instant::now();
@@ -51,5 +63,7 @@ fn main() {
 
         event_queue.new_frame();
     }
+
+    Ok(())
     
 }

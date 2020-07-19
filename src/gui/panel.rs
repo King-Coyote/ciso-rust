@@ -41,7 +41,7 @@ impl<'s, T: Renderer> Panel<'s, T> {
     }
 
     fn update_state(&mut self, new_state: WidgetState) {
-        if let Some(style) = self.styles.get_style(new_state) {
+        if let Some(style) = self.styles.get_style(&new_state) {
             self.shape.set_fill_color(style.background_color);
         }
     }
