@@ -1,32 +1,27 @@
-use sfml::graphics::RenderWindow;
 use crate::events::*;
 use crate::gui::Widget;
 use crate::gui::Panel;
 use crate::rendering::*;
 use crate::util::*;
 use crate::resources::ResourceManager;
-use crate::scripting::Scripting;
+use crate::scripting::{Scripting, LuaChannel,};
 use std::sync::{Arc, Mutex};
-use std::vec::Vec;
+use rlua::Table;
+use rlua::Result;
 
 pub struct Gui<T: Renderer + 'static> {
     root_widgets: Vec<Box<dyn Widget<R = T>>>,
-    scripting: Shared<Scripting>,
     resource_manager: Shared<ResourceManager>,
 }
 
 impl<T: Renderer> Gui<T> {
     pub fn new(
-        event_queue: &mut EventQueue, 
-        scripting: Shared<Scripting>,
         resource_manager: Shared<ResourceManager>
     ) -> Self {
         let mut gui = Gui {
             root_widgets: vec!(),
-            scripting: scripting,
             resource_manager: resource_manager
         };
-        gui.add_widget("kunt");
         return gui;
     }
 

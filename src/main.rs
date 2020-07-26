@@ -14,12 +14,12 @@ use std::{
     sync::{Arc, Mutex,},
     time::{Instant,}
 };
-use events::{EventQueue,};
+use events::{EventQueue,Event,EventType,EventData};
 use rendering::{SimpleWindow, Renderer};
 use resources::ResourceManager;
 use game::Game;
 use gui::Gui;
-use scripting::Scripting;
+use scripting::{Scripting, LuaChannel,};
 use sfml::window::Style;
 use sfml::graphics::RenderWindow;
 use util::*;
@@ -28,7 +28,7 @@ use rlua::{Function, Lua, MetaMethod, Result, UserData, UserDataMethods, Variadi
 
 
 fn main() -> Result<()> {
-    let mut event_queue = EventQueue::new();
+    let (event_tx, event_rx, mut event_queue) = EventQueue::new();
     let mut window = SimpleWindow::new(
         RenderWindow::new(
             (800,600),
@@ -38,14 +38,18 @@ fn main() -> Result<()> {
         )
     ); 
     let resource_manager = shared(ResourceManager::new());
-    let scripting = shared(Scripting::new());
-    let mut gui = Gui::new(&mut event_queue, scripting.clone(), resource_manager.clone());
-    let mut game = Game::new(scripting.clone(), resource_manager.clone());
-    game.test_script1();
-    game.test_script2()?;
+    let scripting = shared(Scripting::new(event_tx));
+    let mut gui = Gui::new(
+        resource_manager.clone()
+    );
+    let mut game = Game::new(
+        resource_manager.clone()
+    );
 
     println!("All systems initialized.");
     let mut elapsed = Instant::now();
+
+    drop(event_tx);
     
     while window.is_open() {
         let dt = Instant::now().duration_since(elapsed).as_secs_f32();
