@@ -7,7 +7,7 @@ pub trait Widget
 
     fn draw(&self, dt: f32, renderer: &mut Self::R);
     fn update(&self, dt: f32);
-    fn handle_event(&mut self, event: &mut Event);
+    fn handle_event(&mut self, event_tuple: &mut (bool, Event));
     fn is_closed(&self) -> bool;
     fn close(&mut self);
 }

@@ -16,6 +16,7 @@ use sfml::graphics::{
 use crate::events::*;
 use crate::rendering::*;
 use std::marker::PhantomData;
+use sfml::window::Event as SFEvent;
 
 use sfml::system::{Vector2f,};
 
@@ -58,16 +59,20 @@ impl<'s, T: Renderer> Widget for Panel<'s, T>
 
     }
 
-    fn handle_event(&mut self, event: &mut Event) {
-        if let Some(new_state) = match event.data {
-            EventData::SFMLInput(data) => {
+    fn handle_event(&mut self, (handled, event): &mut (bool, Event)) {
+        if *handled {
+            return;
+        }
+        if let Some(new_state) = match event {
+            Event::Input(event) => {
                 self.state.handle_state(
                     self.shape.global_bounds(),
-                    &data,
+                    &event
                 )
             },
             _ => None
         } {
+            *handled = true;
             self.update_state(new_state);
         }
     }

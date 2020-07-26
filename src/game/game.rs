@@ -4,12 +4,14 @@ use crate::game::*;
 use crate::util::*;
 use crate::resources::ResourceManager;
 use crate::scripting::{Scripting, LuaChannel};
+use crossbeam_channel::Receiver;
 use rlua::prelude::*;
 use rlua::Result;
 
 const NUM_ENT: u32 = 10;
 /// Represents the game as an ECS system
 pub struct Game<'a> {
+    event_rx: Receiver<Event>,
     resource_manager: Shared<ResourceManager>,
 
     positions: Vec<Position>,
@@ -22,9 +24,11 @@ pub struct Game<'a> {
 
 impl<'a> Game<'a> {
     pub fn new(
+        event_rx: Receiver<Event>,
         resource_manager: Shared<ResourceManager>
     ) -> Self {
         Game {
+            event_rx: event_rx,
             resource_manager: resource_manager,
 
             positions: vec![],
@@ -36,7 +40,7 @@ impl<'a> Game<'a> {
         }
     }
 
-    pub fn update(&mut self, dt: f32, event_queue: &mut EventQueue) {
+    pub fn update(&mut self, dt: f32) {
         self.sys_movement.update(dt, &self.movements, &mut self.positions);
         self.sys_appearance.update(dt, &self.appearances);
     }

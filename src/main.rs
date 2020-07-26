@@ -14,7 +14,7 @@ use std::{
     sync::{Arc, Mutex,},
     time::{Instant,}
 };
-use events::{EventQueue,Event,EventType,EventData};
+use events::{EventQueue,Event,};
 use rendering::{SimpleWindow, Renderer};
 use resources::ResourceManager;
 use game::Game;
@@ -24,7 +24,7 @@ use sfml::window::Style;
 use sfml::graphics::RenderWindow;
 use util::*;
 use rlua::prelude::*;
-use rlua::{Function, Lua, MetaMethod, Result, UserData, UserDataMethods, Variadic};
+use rlua::{Result,};
 
 
 fn main() -> Result<()> {
@@ -35,14 +35,17 @@ fn main() -> Result<()> {
             "Ciso",
             Style::CLOSE,
             &Default::default(),
-        )
+        ),
+        event_tx.clone(),
     ); 
     let resource_manager = shared(ResourceManager::new());
-    let scripting = shared(Scripting::new(event_tx));
+    let scripting = shared(Scripting::new(LuaChannel::new(event_tx.clone())));
     let mut gui = Gui::new(
+        event_rx.clone(),
         resource_manager.clone()
     );
     let mut game = Game::new(
+        event_rx.clone(),
         resource_manager.clone()
     );
 
@@ -50,22 +53,23 @@ fn main() -> Result<()> {
     let mut elapsed = Instant::now();
 
     drop(event_tx);
+    drop(event_rx);
     
     while window.is_open() {
         let dt = Instant::now().duration_since(elapsed).as_secs_f32();
         elapsed = Instant::now();
         // get input from window
-        window.process_input(&mut event_queue);
+        window.process_input();
         // Do all updates
-        gui.update(dt, &mut event_queue);
-        game.update(dt, &mut event_queue);
+        gui.update(dt);
+        game.update(dt);
         // Render to the window
         window.begin();
         gui.draw(dt, &mut window);
         game.draw(dt, &mut window);
         window.end();
 
-        event_queue.new_frame();
+        event_queue.transmit();
     }
 
     Ok(())

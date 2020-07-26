@@ -5,15 +5,18 @@ use sfml::graphics::{
 };
 use sfml::window::Event as SFEvent;
 use crate::events::*;
+use crossbeam_channel::Sender;
 
 /// A window that simply draws to an sfml window without any batching etc
 pub struct SimpleWindow {
+    event_tx: Sender<Event>,
     window: RenderWindow,
 }
 
 impl SimpleWindow {
-    pub fn new(window: RenderWindow) -> Self {
+    pub fn new(window: RenderWindow, event_tx: Sender<Event>) -> Self {
         SimpleWindow {
+            event_tx: event_tx,
             window: window
         }
     }
@@ -22,11 +25,11 @@ impl SimpleWindow {
         self.window.is_open()
     }
 
-    pub fn process_input(&mut self, event_queue: &mut EventQueue) {
+    pub fn process_input(&mut self) {
         while let Some(event) = self.window.poll_event() {
             match event {
                 SFEvent::Closed => self.window.close(),
-                _ => event_queue.post(Event::new(EventType::Input, EventData::SFMLInput(event))),
+                _ => self.event_tx.send(Event::Input(event)).expect("whoops, event not sent from window")
             };
         }
     }

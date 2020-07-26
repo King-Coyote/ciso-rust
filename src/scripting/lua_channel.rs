@@ -18,7 +18,6 @@ impl<T> LuaChannel<T> {
 impl<T> UserData for LuaChannel<T> {
     fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method("send", |_, channel, ()| {
-            channel.send()
             Ok(())
         });
     }
