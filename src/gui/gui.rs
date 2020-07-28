@@ -27,6 +27,7 @@ impl<T: Renderer> Gui<T> {
             root_widgets: vec!(),
             resource_manager: resource_manager
         };
+        gui.add_widget("fiuckj");
         return gui;
     }
 
@@ -53,20 +54,24 @@ impl<T: Renderer> Gui<T> {
         self.root_widgets.push(Box::new(Panel::new((100.0, 100.0), (0.0,0.0))));
     }
 
-    fn handle_event(&mut self, e: Event) {
-        println!("Handling input event!");
-        // match e {
-        //     Event::CreateGui(data_to_go_here) => self.handle_event_create(data_to_go_here),
-        //     _ => {
-        //         let mut event_tuple = (false, e);
-        //         for widget in self.root_widgets.iter_mut() {
-        //             widget.handle_event(&mut event_tuple);
-        //         }
-        //     }
-        // }
+    fn handle_event(&mut self, event: Event) {
+        match event {
+            Event::CreateGui(data_to_go_here) => self.handle_event_create(&data_to_go_here),
+            Event::Input(sf_event) => {
+                let mut handled = false;
+                for widget in self.root_widgets.iter_mut() {
+                    if handled {
+                        println!("event has been handled.");
+                        break;
+                    }
+                    println!("Handling input event!");
+                    widget.handle_input(&mut handled, &sf_event);
+                }
+            }
+        }
     }
 
-    fn handle_event_create(&mut self, wat_do_here: String) {
+    fn handle_event_create(&mut self, wat_do_here: &str) {
         
     }
 }

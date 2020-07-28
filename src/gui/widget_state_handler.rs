@@ -42,6 +42,7 @@ impl WidgetStateHandler {
     pub fn handle_state (
         &mut self,
         bounds: FloatRect,
+        handled: &mut bool,
         sf_event: &SFEvent,
     ) -> Option<WidgetState> {
         if self.state == WidgetState::Disabled {
@@ -63,6 +64,9 @@ impl WidgetStateHandler {
             _ => None,
         } {
             self.state = new_state;
+            if new_state != WidgetState::Enabled {
+                *handled = true;
+            }
             return Some(new_state);
         }
         None

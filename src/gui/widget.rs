@@ -1,5 +1,6 @@
 use crate::events::Event;
 use crate::rendering::Renderer;
+use sfml::window::Event as SFEvent;
 
 pub trait Widget
 {
@@ -7,7 +8,7 @@ pub trait Widget
 
     fn draw(&self, dt: f32, renderer: &mut Self::R);
     fn update(&self, dt: f32);
-    fn handle_event(&mut self, event_tuple: &mut (bool, Event));
+    fn handle_input(&mut self, handled: &mut bool, sf_event: &SFEvent);
     fn is_closed(&self) -> bool;
     fn close(&mut self);
 }

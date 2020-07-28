@@ -48,7 +48,7 @@ impl<'s, T: Renderer> Panel<'s, T> {
     }
 }
 
-impl<'s, T: Renderer> Widget for Panel<'s, T> 
+impl<'s, T: Renderer> Widget for Panel<'s, T>
 {
     type R = T;
     fn draw(&self, dt: f32, renderer: &mut T) {
@@ -59,20 +59,12 @@ impl<'s, T: Renderer> Widget for Panel<'s, T>
 
     }
 
-    fn handle_event(&mut self, (handled, event): &mut (bool, Event)) {
-        if *handled {
-            return;
-        }
-        if let Some(new_state) = match event {
-            Event::Input(event) => {
-                self.state.handle_state(
-                    self.shape.global_bounds(),
-                    &event
-                )
-            },
-            _ => None
-        } {
-            *handled = true;
+    fn handle_input(&mut self, handled: &mut bool, sf_event: &SFEvent) {
+        if let Some(new_state) = self.state.handle_state(
+            self.shape.global_bounds(),
+            handled,
+            sf_event
+        ) {
             self.update_state(new_state);
         }
     }
