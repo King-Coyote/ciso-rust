@@ -51,7 +51,9 @@ impl<T: Renderer> Gui<T> {
     }
 
     fn add_widget(&mut self, filename: &'static str) {
-        self.root_widgets.push(Box::new(Panel::new((100.0, 100.0), (0.0,0.0))));
+        let mut wid = Box::new(Panel::<T>::new((100.0, 100.0), (0.0,0.0)));
+        wid.add_child(Box::new(Panel::<T>::new((50.0, 50.0), (0.0, 0.0))));
+        self.root_widgets.push(wid);
     }
 
     fn handle_event(&mut self, event: Event) {

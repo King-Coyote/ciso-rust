@@ -24,21 +24,24 @@ pub struct Panel<'s, T: Renderer> {
     shape: RectangleShape<'s>,
     state: WidgetStateHandler,
     styles: StyleMap,
+    children: Vec<Box<dyn Widget<R = T>>>,
     widget_phantom: PhantomData<T>,
 }
 
-impl<'s, T: Renderer> Panel<'s, T> {
+impl<'s, T: Renderer + 'static> Panel<'s, T> {
     pub fn new<S: Into<Vector2f>>(size: S, pos: S) -> Panel<'s, T> {
         let mut panel_shape = RectangleShape::new();
         panel_shape.set_size(size);
         panel_shape.set_position(pos);
         panel_shape.set_fill_color(Color::WHITE);
-        Panel::<T> {
+        let panel = Panel::<T> {
             shape: panel_shape,
             state: WidgetStateHandler::new(),
             styles: StyleMap::new(),
+            children: vec![],
             widget_phantom: PhantomData
-        }
+        };
+        panel
     }
 
     fn update_state(&mut self, new_state: WidgetState) {
@@ -46,13 +49,21 @@ impl<'s, T: Renderer> Panel<'s, T> {
             self.shape.set_fill_color(style.background_color);
         }
     }
+
+    // probably delete this later dude
+    pub fn add_child(&mut self, panel: Box<Panel<'static, T>>) {
+        self.children.push(panel);
+    }
 }
 
-impl<'s, T: Renderer> Widget for Panel<'s, T>
+impl<'s, T: Renderer + 'static> Widget for Panel<'s, T>
 {
     type R = T;
     fn draw(&self, dt: f32, renderer: &mut T) {
         renderer.draw_shape(&self.shape);
+        for child in self.children.iter() {
+            child.draw(dt, renderer);
+        }
     }
 
     fn update(&self, dt: f32) {
@@ -60,6 +71,12 @@ impl<'s, T: Renderer> Widget for Panel<'s, T>
     }
 
     fn handle_input(&mut self, handled: &mut bool, sf_event: &SFEvent) {
+        for child in self.children.iter_mut() {
+            child.handle_input(handled, sf_event);
+        }
+        if *handled {
+            return;
+        }
         if let Some(new_state) = self.state.handle_state(
             self.shape.global_bounds(),
             handled,
