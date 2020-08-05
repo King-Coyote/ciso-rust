@@ -51,8 +51,8 @@ impl<T: Renderer> Gui<T> {
     }
 
     fn add_widget(&mut self, filename: &'static str) {
-        let mut wid = Box::new(Panel::<T>::new((100.0, 100.0), (0.0,0.0)));
-        wid.add_child(Box::new(Panel::<T>::new((50.0, 50.0), (0.0, 0.0))));
+        let mut wid = Box::new(Panel::<T>::new((100.0, 100.0), (0.0,0.0), "Parent"));
+        wid.add_child(Box::new(Panel::<T>::new((50.0, 50.0), (0.0, 0.0), "Child")));
         self.root_widgets.push(wid);
     }
 
@@ -63,10 +63,8 @@ impl<T: Renderer> Gui<T> {
                 let mut handled = false;
                 for widget in self.root_widgets.iter_mut() {
                     if handled {
-                        println!("event has been handled.");
                         break;
                     }
-                    println!("Handling input event!");
                     widget.handle_input(&mut handled, &sf_event);
                 }
             }

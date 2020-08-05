@@ -26,10 +26,11 @@ pub struct Panel<'s, T: Renderer> {
     styles: StyleMap,
     children: Vec<Box<dyn Widget<R = T>>>,
     widget_phantom: PhantomData<T>,
+    id: String,
 }
 
 impl<'s, T: Renderer + 'static> Panel<'s, T> {
-    pub fn new<S: Into<Vector2f>>(size: S, pos: S) -> Panel<'s, T> {
+    pub fn new<S: Into<Vector2f>>(size: S, pos: S, id: &str) -> Panel<'s, T> {
         let mut panel_shape = RectangleShape::new();
         panel_shape.set_size(size);
         panel_shape.set_position(pos);
@@ -39,7 +40,8 @@ impl<'s, T: Renderer + 'static> Panel<'s, T> {
             state: WidgetStateHandler::new(),
             styles: StyleMap::new(),
             children: vec![],
-            widget_phantom: PhantomData
+            widget_phantom: PhantomData,
+            id: id.to_owned()
         };
         panel
     }
@@ -74,11 +76,8 @@ impl<'s, T: Renderer + 'static> Widget for Panel<'s, T>
         for child in self.children.iter_mut() {
             child.handle_input(handled, sf_event);
         }
-        if *handled {
-            return;
-        }
         if let Some(new_state) = self.state.handle_state(
-            self.shape.global_bounds(),
+            &self.shape.global_bounds(),
             handled,
             sf_event
         ) {

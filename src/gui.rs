@@ -10,7 +10,6 @@ mod panel;
 pub use self::widget_state_handler::{
     WidgetStateHandler,
     WidgetState,
-    WidgetStateOption,
 };
 mod widget_state_handler;
 
