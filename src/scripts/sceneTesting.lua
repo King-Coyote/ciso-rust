@@ -23,59 +23,61 @@ local textStyleStatic = {
     }
 }
 
-local Widgets = require "Widgets"
-local startSize = {100, 50}
-local pos = {Gui:screenWidth() - 100, 0}
 
-local makeDynamicText = function(_pos, _string, _onClick)
 
-    local text =  {
-        type = 'text',
-        font = 'DejaVuSans.ttf',
-        style = textStyleDynamic,
-        properties = {
-            string = _string,
-            position = _pos,
-            fontSize = 24,
-            handleOnClick = _onClick,
-        }
-    }
+-- local Widgets = require "Widgets"
+-- local startSize = {100, 50}
+-- local pos = {Gui:screenWidth() - 100, 0}
 
-    Gui:render{
-        text
-    }
+-- local makeDynamicText = function(_pos, _string, _onClick)
 
-end
+--     local text =  {
+--         type = 'text',
+--         font = 'DejaVuSans.ttf',
+--         style = textStyleDynamic,
+--         properties = {
+--             string = _string,
+--             position = _pos,
+--             fontSize = 24,
+--             handleOnClick = _onClick,
+--         }
+--     }
 
-local mainText =  {
-    type = 'text',
-    font = 'DejaVuSans.ttf',
-    style = textStyleStatic,
-    properties = {
-        string = 'A C A D E M Y',
-        position = {10, 20},
-        fontSize = 32,
-    }
-}
+--     Gui:render{
+--         text
+--     }
 
-Gui:render{
-    mainText
-}
+-- end
 
-local createTestArea = function()
+-- local mainText =  {
+--     type = 'text',
+--     font = 'DejaVuSans.ttf',
+--     style = textStyleStatic,
+--     properties = {
+--         string = 'A C A D E M Y',
+--         position = {10, 20},
+--         fontSize = 32,
+--     }
+-- }
 
-    local area = Game:createEntity{
-        space = {
-            level = 100
-        }
-    }
+-- Gui:render{
+--     mainText
+-- }
 
-    print('area created with id ' .. area)
+-- local createTestArea = function()
 
-end
+--     local area = Game:createEntity{
+--         space = {
+--             level = 100
+--         }
+--     }
 
-makeDynamicText({10, 200}, 'Create test area', createTestArea)
-makeDynamicText({10, 250}, 'Exit game', function() Game:exit() end)
+--     print('area created with id ' .. area)
+
+-- end
+
+-- makeDynamicText({10, 200}, 'Create test area', createTestArea)
+-- makeDynamicText({10, 250}, 'Exit game', function() Game:exit() end)
 
 -- Widgets.Button(startSize, pos, 'Fuck', 'buttonBasic')
 

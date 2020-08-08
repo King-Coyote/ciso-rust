@@ -56,6 +56,14 @@ fn main() -> Result<()> {
 
     drop(event_tx);
     drop(event_rx);
+
+    scripting.lock().unwrap().lua.context(|ctx| -> Result<()> {
+        ctx.load(r#"
+            Gui:add_widget({size = {100, 45}, position = {40, 40}})
+            Gui:add_widget({size = {100, 45}, position = {40, 140}})
+        "#).exec()?;
+        Ok(())
+    }).unwrap();
     
     while window.is_open() {
         let dt = Instant::now().duration_since(elapsed).as_secs_f32();

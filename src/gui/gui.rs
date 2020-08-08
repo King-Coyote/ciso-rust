@@ -6,7 +6,7 @@ use crate::util::*;
 use crate::resources::ResourceManager;
 use crate::scripting::{Scripting, LuaChannel,};
 use std::sync::{Arc, Mutex};
-use rlua::{Table, Result, Lua, Scope};
+use rlua::{Table, Result, Lua, Scope, UserData, Value};
 use crossbeam_channel::Receiver;
 use sfml::window::Event as SFEvent;
 
@@ -52,12 +52,6 @@ impl Gui {
         });
     }
 
-    // fn add_widget(&mut self, widget_table: &Table, scope: &Scope) {
-    //     let mut wid = Box::new(Panel::new((100.0, 100.0), (0.0,0.0), "Parent"));
-    //     wid.add_child(Box::new(Panel::new((50.0, 50.0), (0.0, 0.0), "Child")));
-    //     self.root_widgets.push(wid);
-    // }
-
     fn handle_event(&mut self, event: Event) {
         match event {
             Event::CreateGui(id) => self.handle_event_create(id),
@@ -75,32 +69,53 @@ impl Gui {
 
     fn handle_event_create(&mut self, id: u32) {
         let mut root_widgets = &mut self.root_widgets;
-        self.scripting.lock().unwrap().lua.context(|ctx| -> Result<()> {
+        match self.scripting.lock().unwrap().lua.context(|ctx| -> Result<()> {
             ctx.scope(|scope| {
                 let globals = ctx.globals();
                 let widget_table: Table = globals
-                    .get::<&str, Table>("GUI")?
+                    .get::<&str, Table>("Gui")?
                     .get::<&str, Table>("widgets")?
                     .get::<u32, Table>(id)?;
-                root_widgets.push(Box::new(Panel::new((100.0, 100.0), (40.0, 40.0), id)));
-                println!("Created gui with id {}", id);
+                // replace with builder later on
+                let size: (f32, f32) = table_to_pair(widget_table.get("size")?)?;
+                let position: (f32, f32) = table_to_pair(widget_table.get("position")?)?;
+                root_widgets.push(Box::new(Panel::new(
+                    size, 
+                    position, 
+                    id
+                )));
                 Ok(())
             })?;
             Ok(())
             
-        }).expect("Failed to create widget");
+        }) {
+            Err(err) => println!("Failed to create widget: \n{}", err),
+            _ => {}
+        }
     }
 }
 
 fn lua_preamble(lua: &Lua) -> Result<()> {
     lua.context(|ctx| {
-        ctx.load(r#"
-            Gui = {
-                add_widget = function()
-                    print("test succeeded")
-                end
-            }
-        "#).exec()?;
+        let gui_table = ctx.create_table()?;
+        gui_table.set("num_widgets", 1)?;
+        gui_table.set("widgets", ctx.create_table()?)?;
+
+        let lua_add_widget = ctx.create_function(|ctx, (this, t): (Table, Table)| {
+            let num: u32 = this.raw_get("num_widgets")?;
+            t.raw_set("id", num)?;
+            // add the actual widget info to the widgets table
+            this.get::<&str, Table>("widgets")?
+                .set(num, t)?;
+            let event_channel: LuaChannel = ctx.globals().get("EventChannel")?;
+            ctx.globals().get::<&str, LuaChannel>("EventChannel")?
+                .send(Event::CreateGui(num))?;
+            this.raw_set("num_widgets", num + 1)?;
+            Ok(())
+        })?;
+        gui_table.set("add_widget", lua_add_widget)?;
+
+        ctx.globals().set("Gui", gui_table)?;
         Ok(())
     })?;
     Ok(())

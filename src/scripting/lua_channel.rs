@@ -1,32 +1,41 @@
-use crate::events::Event;
-use rlua::{UserData, UserDataMethods, Result, Table};
+use crate::events::*;
+use rlua::{
+    UserData, 
+    UserDataMethods, 
+    Result, 
+    Table, 
+    Context,
+    Value
+};
+use rlua::Error;
 use crossbeam_channel::Sender;
+use std::sync::Arc;
 
 #[derive(Clone,)]
-pub struct LuaChannel<T> {
-    sender: Sender<T>,
+pub struct LuaChannel {
+    sender: Sender<Event>,
 }
 
-impl<T> LuaChannel<T> {
-    pub fn new(sender: Sender<T>) -> Self {
+impl LuaChannel {
+    pub fn new(sender: Sender<Event>) -> Self {
         LuaChannel {
             sender: sender
         }
     }
 
-    pub fn send(&self, message: T) -> Result<()> {
-
-        Ok(())
+    pub fn send(&self, message: Event) -> Result<()> {
+        match self.sender.try_send(message) {
+            Ok(_) => Ok(()),
+            Err(err) => Err(Error::ExternalError(Arc::new(err)))
+        }
     }
 }
 
-impl<T> UserData for LuaChannel<T> {
+impl UserData for LuaChannel {
     fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_method("send", |_, channel, table| {
-            // channel.send()
+        methods.add_method("send", |_, channel, (table): (Table)| {
+            channel.send(event_from_lua(table)?)?;
             Ok(())
         });
     }
 }
-
-struct EventFromLua(Table);
