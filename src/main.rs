@@ -56,8 +56,8 @@ fn main() -> Result<()> {
 
     scripting.lock().unwrap().lua.context(|ctx| -> Result<()> {
         ctx.load(r#"
-            Gui:add_widget({size = {100, 45}, position = {40, 40}})
-            Gui:add_widget({size = {100, 45}, position = {40, 140}})
+            Gui:add_widget({type = 'PANEL', size = {100, 45}, position = {40, 40}})
+            Gui:add_widget({type = 'PANEL', size = {100, 45}, position = {40, 140}})
         "#).exec()?;
         Ok(())
     }).unwrap();

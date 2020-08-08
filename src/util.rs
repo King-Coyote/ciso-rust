@@ -12,19 +12,3 @@ pub fn table_to_pair<'lua, T: FromLua<'lua> + Send + Sync>(t: Table<'lua>) -> Re
     let b = t.get::<u32, T>(2)?;
     Ok((a, b))
 }
-
-// pub struct LuaPair<'lua, A: FromLua<'lua>, B: FromLua<'lua>>((A, B));
-
-// impl<'lua, A: FromLua<'lua>, B: FromLua<'lua>> FromLua<'lua> for LuaPair<'lua, A, B> {
-//     fn from_lua(v: Value<'lua>, _: Context<'lua>) -> Result<Self> {
-//         match v {
-//             Value::Table(t) => {
-//                 let a: A = t.get::<A>(0);
-//                 Ok((
-
-//                 )),
-//             }
-//             _ => Ok(true),
-//         }
-//     }
-// }

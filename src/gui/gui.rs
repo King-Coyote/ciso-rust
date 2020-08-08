@@ -1,10 +1,11 @@
-use crate::events::*;
-use crate::gui::Widget;
-use crate::gui::Panel;
-use crate::rendering::*;
-use crate::util::*;
-use crate::resources::ResourceManager;
-use crate::scripting::{Scripting, LuaChannel,};
+use crate::{
+    events::*,
+    gui::{Widget, build_widget,},
+    rendering::*,
+    util::*,
+    resources::ResourceManager,
+    scripting::{Scripting, LuaChannel,},
+};
 use rlua::{Table, Result, Lua,};
 use crossbeam_channel::Receiver;
 
@@ -73,14 +74,8 @@ impl Gui {
                 .get::<&str, Table>("Gui")?
                 .get::<&str, Table>("widgets")?
                 .get::<u32, Table>(id)?;
-            // replace with builder later on
-            let size: (f32, f32) = table_to_pair(widget_table.get("size")?)?;
-            let position: (f32, f32) = table_to_pair(widget_table.get("position")?)?;
-            root_widgets.push(Box::new(Panel::new(
-                size, 
-                position, 
-                id
-            )));
+            let widget = build_widget(&widget_table, id)?;
+            root_widgets.push(widget);
             Ok(())            
         }) {
             Err(err) => println!("Failed to create widget: \n{}", err),

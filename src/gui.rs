@@ -1,7 +1,7 @@
 pub use self::gui::Gui;
 mod gui;
 
-pub use self::widget::Widget;
+pub use self::widget::{Widget, build_widget,};
 mod widget;
 
 pub use self::panel::Panel;

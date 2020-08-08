@@ -24,6 +24,12 @@ pub struct Panel<'s> {
 }
 
 impl<'s> Panel<'s> {
+    /// Create a new panel
+    /// # Arguments
+    /// 
+    /// * 'size' 
+    /// * 'pos'
+    /// * 'id'
     pub fn new<S: Into<Vector2f>>(size: S, pos: S, id: u32) -> Panel<'s> {
         let mut panel_shape = RectangleShape::new();
         panel_shape.set_size(size);
