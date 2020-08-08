@@ -2,20 +2,15 @@ use crate::gui::{
     Widget, 
     WidgetStateHandler,
     WidgetState,
-    Style,
     StyleMap,
 };
 use sfml::graphics::{
-    RenderWindow, 
     RectangleShape, 
-    RenderTarget,
     Transformable, 
     Color,
     Shape,
 };
-use crate::events::*;
 use crate::rendering::*;
-use std::marker::PhantomData;
 use sfml::window::Event as SFEvent;
 
 use sfml::system::{Vector2f,};

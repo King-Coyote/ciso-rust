@@ -1,7 +1,4 @@
 use sfml::window::Event as SFEvent;
-use std::hash::{Hash, Hasher};
-use std::sync::{Arc, Mutex,};
-use crate::gui::Widget;
 use rlua::{Table, Result, Error};
 
 pub enum Event {
@@ -10,7 +7,6 @@ pub enum Event {
 }
 
 pub fn event_from_lua(t: Table) -> Result<Event> {
-    let durr = t.contains_key("type")?;
     let event_type: String = t.get("type")?;
     match &event_type[..] {
         "CREATE_WIDGET" => {
@@ -26,22 +22,3 @@ pub fn event_from_lua(t: Table) -> Result<Event> {
         }
     }
 }
-
-// #[derive(Debug, Clone)]
-// pub struct Event {
-//     pub t: EventType,
-//     pub data: EventData
-// }
-
-// impl Event {
-//     pub fn new(t: EventType, data: EventData) -> Event {
-//         Event {
-//             t: t,
-//             data: data
-//         }
-//     }
-    
-//     // pub fn from_lua() -> Self {
-
-//     // }
-// }

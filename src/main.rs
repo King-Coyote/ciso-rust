@@ -1,5 +1,4 @@
 mod events;
-mod input;
 mod rendering;
 mod resources;
 mod gui;
@@ -11,10 +10,9 @@ extern crate sfml;
 extern crate rlua;
 
 use std::{
-    sync::{Arc, Mutex,},
     time::{Instant,}
 };
-use events::{EventQueue,Event,};
+use events::{EventQueue,};
 use rendering::{Renderer};
 use resources::ResourceManager;
 use game::Game;
@@ -23,12 +21,11 @@ use scripting::{Scripting, LuaChannel,};
 use sfml::window::Style;
 use sfml::graphics::RenderWindow;
 use util::*;
-use rlua::prelude::*;
 use rlua::{Result,};
 
 
 fn main() -> Result<()> {
-    let (event_tx, event_rx, mut event_queue) = EventQueue::new();
+    let (event_tx, event_rx, event_queue) = EventQueue::new();
     let mut window = Renderer::new(
         RenderWindow::new(
             (800,600),

@@ -1,7 +1,5 @@
-use std::sync::{Arc, Mutex, MutexGuard};
-use std::ops::Deref;
-use rlua::{FromLua, Value, Context,Result, Table};
-use sfml::system::Vector2f;
+use std::sync::{Arc, Mutex,};
+use rlua::{FromLua, Result, Table};
 
 pub type Shared<T> = Arc<Mutex<T>>;
 

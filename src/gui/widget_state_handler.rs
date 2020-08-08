@@ -1,12 +1,8 @@
-use crate::events::*;
-use crate::gui::Style;
 use sfml::window::{
     {Event as SFEvent, Key},
     mouse::Button,
 };
-use sfml::system::{Vector2f,};
 use sfml::graphics::{FloatRect,};
-use std::collections::HashMap;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug,)]
 pub enum WidgetState {

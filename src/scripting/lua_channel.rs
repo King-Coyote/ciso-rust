@@ -3,9 +3,7 @@ use rlua::{
     UserData, 
     UserDataMethods, 
     Result, 
-    Table, 
-    Context,
-    Value
+    Table,
 };
 use rlua::Error;
 use crossbeam_channel::Sender;
@@ -33,7 +31,7 @@ impl LuaChannel {
 
 impl UserData for LuaChannel {
     fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_method("send", |_, channel, (table): (Table)| {
+        methods.add_method("send", |_, channel, table: Table| {
             channel.send(event_from_lua(table)?)?;
             Ok(())
         });

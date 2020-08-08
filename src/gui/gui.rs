@@ -5,10 +5,8 @@ use crate::rendering::*;
 use crate::util::*;
 use crate::resources::ResourceManager;
 use crate::scripting::{Scripting, LuaChannel,};
-use std::sync::{Arc, Mutex};
-use rlua::{Table, Result, Lua, Scope, UserData, Value};
+use rlua::{Table, Result, Lua,};
 use crossbeam_channel::Receiver;
-use sfml::window::Event as SFEvent;
 
 pub struct Gui {
     scripting: Shared<Scripting>,
@@ -68,26 +66,22 @@ impl Gui {
     }
 
     fn handle_event_create(&mut self, id: u32) {
-        let mut root_widgets = &mut self.root_widgets;
+        let root_widgets = &mut self.root_widgets;
         match self.scripting.lock().unwrap().lua.context(|ctx| -> Result<()> {
-            ctx.scope(|scope| {
-                let globals = ctx.globals();
-                let widget_table: Table = globals
-                    .get::<&str, Table>("Gui")?
-                    .get::<&str, Table>("widgets")?
-                    .get::<u32, Table>(id)?;
-                // replace with builder later on
-                let size: (f32, f32) = table_to_pair(widget_table.get("size")?)?;
-                let position: (f32, f32) = table_to_pair(widget_table.get("position")?)?;
-                root_widgets.push(Box::new(Panel::new(
-                    size, 
-                    position, 
-                    id
-                )));
-                Ok(())
-            })?;
-            Ok(())
-            
+            let globals = ctx.globals();
+            let widget_table: Table = globals
+                .get::<&str, Table>("Gui")?
+                .get::<&str, Table>("widgets")?
+                .get::<u32, Table>(id)?;
+            // replace with builder later on
+            let size: (f32, f32) = table_to_pair(widget_table.get("size")?)?;
+            let position: (f32, f32) = table_to_pair(widget_table.get("position")?)?;
+            root_widgets.push(Box::new(Panel::new(
+                size, 
+                position, 
+                id
+            )));
+            Ok(())            
         }) {
             Err(err) => println!("Failed to create widget: \n{}", err),
             _ => {}
@@ -107,7 +101,6 @@ fn lua_preamble(lua: &Lua) -> Result<()> {
             // add the actual widget info to the widgets table
             this.get::<&str, Table>("widgets")?
                 .set(num, t)?;
-            let event_channel: LuaChannel = ctx.globals().get("EventChannel")?;
             ctx.globals().get::<&str, LuaChannel>("EventChannel")?
                 .send(Event::CreateGui(num))?;
             this.raw_set("num_widgets", num + 1)?;

@@ -1,16 +1,7 @@
-use std::vec::Vec;
-use std::collections::VecDeque;
-use std::collections::HashMap;
-use std::sync::{Weak, Arc, Mutex,};
-use std::iter::Iterator;
-use std::mem::swap;
 use crate::events::{Event,};
-use rlua::{UserData, UserDataMethods};
-use crossbeam_channel::{Sender, Receiver, unbounded, TrySendError};
+use crossbeam_channel::{Sender, Receiver, unbounded,};
 
 pub struct EventQueue {
-    // events_current: VecDeque<Event>,
-    // events_next: VecDeque<Event>,
     inbound: Receiver<Event>,
     outbound_tx: Sender<Event>,
 }

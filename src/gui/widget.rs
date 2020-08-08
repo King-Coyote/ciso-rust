@@ -1,4 +1,3 @@
-use crate::events::Event;
 use crate::rendering::Renderer;
 use sfml::window::Event as SFEvent;
 

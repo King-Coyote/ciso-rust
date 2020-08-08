@@ -1,7 +1,6 @@
 use rlua::prelude::*;
 use rlua::Result;
 use crate::LuaChannel;
-use crate::events::Event;
 
 pub struct Scripting {
     pub lua: Lua
