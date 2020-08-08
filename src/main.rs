@@ -5,6 +5,7 @@ mod gui;
 mod game;
 mod scripting;
 mod util;
+mod macros;
 
 extern crate sfml;
 extern crate rlua;
@@ -54,7 +55,7 @@ fn main() -> Result<()> {
     drop(event_tx);
     drop(event_rx);
 
-    scripting.lock().unwrap().lua.context(|ctx| -> Result<()> {
+    safe_context!(scripting, |ctx| -> Result<()> {
         ctx.load(r#"
             Gui:add_widget({type = 'PANEL', size = {100, 45}, position = {40, 40}})
             Gui:add_widget({type = 'PANEL', size = {100, 45}, position = {40, 140}})

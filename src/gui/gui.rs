@@ -6,6 +6,8 @@ use crate::{
     resources::ResourceManager,
     scripting::{Scripting, LuaChannel,},
 };
+#[macro_use]
+use crate::safe_context;
 use rlua::{Table, Result, Lua,};
 use crossbeam_channel::Receiver;
 
@@ -22,7 +24,7 @@ impl Gui {
         event_rx: Receiver<Event>,
         resource_manager: Shared<ResourceManager>
     ) -> Self {
-        lua_preamble(&scripting.lock().unwrap().lua).expect("Failed to add gui preamble to lua.");
+        lua_preamble(&scripting).expect("Failed to add gui preamble to lua.");
         let mut gui = Gui {
             scripting: scripting,
             event_rx: event_rx,
@@ -68,7 +70,7 @@ impl Gui {
 
     fn handle_event_create(&mut self, id: u32) {
         let root_widgets = &mut self.root_widgets;
-        match self.scripting.lock().unwrap().lua.context(|ctx| -> Result<()> {
+        match safe_context!(self.scripting, |ctx| -> Result<()> {
             let globals = ctx.globals();
             let widget_table: Table = globals
                 .get::<&str, Table>("Gui")?
@@ -84,8 +86,8 @@ impl Gui {
     }
 }
 
-fn lua_preamble(lua: &Lua) -> Result<()> {
-    lua.context(|ctx| {
+fn lua_preamble(scripting: &Shared<Scripting>) -> Result<()> {
+    safe_context!(scripting, |ctx| {
         let gui_table = ctx.create_table()?;
         gui_table.set("num_widgets", 1)?;
         gui_table.set("widgets", ctx.create_table()?)?;
