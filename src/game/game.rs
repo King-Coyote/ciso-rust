@@ -11,6 +11,7 @@ use rlua::Result;
 const NUM_ENT: u32 = 10;
 /// Represents the game as an ECS system
 pub struct Game<'a> {
+    scripting: Shared<Scripting>,
     event_rx: Receiver<Event>,
     resource_manager: Shared<ResourceManager>,
 
@@ -24,10 +25,12 @@ pub struct Game<'a> {
 
 impl<'a> Game<'a> {
     pub fn new(
+        scripting: Shared<Scripting>,
         event_rx: Receiver<Event>,
         resource_manager: Shared<ResourceManager>
     ) -> Self {
         Game {
+            scripting: scripting,
             event_rx: event_rx,
             resource_manager: resource_manager,
 
@@ -45,7 +48,7 @@ impl<'a> Game<'a> {
         self.sys_appearance.update(dt, &self.appearances);
     }
 
-    pub fn draw(&self, dt: f32, renderer: &mut impl Renderer) {
+    pub fn draw(&self, dt: f32, renderer: &mut Renderer) {
         self.sys_appearance.draw(dt, &self.appearances, renderer);
     }
 }

@@ -1,11 +1,12 @@
 use sfml::window::Event as SFEvent;
 use std::hash::{Hash, Hasher};
+use std::sync::{Arc, Mutex,};
 use crate::gui::Widget;
 use rlua::{Table, Result};
 
 pub enum Event {
     Input(SFEvent),
-    CreateGui(String),
+    CreateGui(u32), // an id that counts up
 }
 
 // #[derive(Debug, Clone)]

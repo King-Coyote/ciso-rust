@@ -30,7 +30,7 @@ impl AppearanceSystem {
 
     }
 
-    pub fn draw(&self, dt: f32, appearances: &[Appearance], renderer: &mut impl Renderer) {
+    pub fn draw(&self, dt: f32, appearances: &[Appearance], renderer: &mut Renderer) {
         
     }
 }

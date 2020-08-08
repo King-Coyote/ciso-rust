@@ -20,28 +20,26 @@ use sfml::window::Event as SFEvent;
 
 use sfml::system::{Vector2f,};
 
-pub struct Panel<'s, T: Renderer> {
+pub struct Panel<'s> {
     shape: RectangleShape<'s>,
     state: WidgetStateHandler,
     styles: StyleMap,
-    children: Vec<Box<dyn Widget<R = T>>>,
-    widget_phantom: PhantomData<T>,
-    id: String,
+    children: Vec<Box<dyn Widget>>,
+    id: u32
 }
 
-impl<'s, T: Renderer + 'static> Panel<'s, T> {
-    pub fn new<S: Into<Vector2f>>(size: S, pos: S, id: &str) -> Panel<'s, T> {
+impl<'s> Panel<'s> {
+    pub fn new<S: Into<Vector2f>>(size: S, pos: S, id: u32) -> Panel<'s> {
         let mut panel_shape = RectangleShape::new();
         panel_shape.set_size(size);
         panel_shape.set_position(pos);
         panel_shape.set_fill_color(Color::WHITE);
-        let panel = Panel::<T> {
+        let panel = Panel {
             shape: panel_shape,
             state: WidgetStateHandler::new(),
             styles: StyleMap::new(),
             children: vec![],
-            widget_phantom: PhantomData,
-            id: id.to_owned()
+            id: id
         };
         panel
     }
@@ -53,15 +51,14 @@ impl<'s, T: Renderer + 'static> Panel<'s, T> {
     }
 
     // probably delete this later dude
-    pub fn add_child(&mut self, panel: Box<Panel<'static, T>>) {
+    pub fn add_child(&mut self, panel: Box<Panel<'static>>) {
         self.children.push(panel);
     }
 }
 
-impl<'s, T: Renderer + 'static> Widget for Panel<'s, T>
+impl<'s> Widget for Panel<'s>
 {
-    type R = T;
-    fn draw(&self, dt: f32, renderer: &mut T) {
+    fn draw(&self, dt: f32, renderer: &mut Renderer) {
         renderer.draw_shape(&self.shape);
         for child in self.children.iter() {
             child.draw(dt, renderer);

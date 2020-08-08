@@ -15,7 +15,7 @@ use std::{
     time::{Instant,}
 };
 use events::{EventQueue,Event,};
-use rendering::{SimpleWindow, Renderer};
+use rendering::{Renderer};
 use resources::ResourceManager;
 use game::Game;
 use gui::Gui;
@@ -29,7 +29,7 @@ use rlua::{Result,};
 
 fn main() -> Result<()> {
     let (event_tx, event_rx, mut event_queue) = EventQueue::new();
-    let mut window = SimpleWindow::new(
+    let mut window = Renderer::new(
         RenderWindow::new(
             (800,600),
             "Ciso",
@@ -41,10 +41,12 @@ fn main() -> Result<()> {
     let resource_manager = shared(ResourceManager::new());
     let scripting = shared(Scripting::new(LuaChannel::new(event_tx.clone())));
     let mut gui = Gui::new(
+        scripting.clone(),
         event_rx.clone(),
         resource_manager.clone()
     );
     let mut game = Game::new(
+        scripting.clone(),
         event_rx.clone(),
         resource_manager.clone()
     );

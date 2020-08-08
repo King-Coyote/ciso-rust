@@ -1,5 +1,5 @@
 use crate::events::Event;
-use rlua::{UserData, UserDataMethods};
+use rlua::{UserData, UserDataMethods, Result, Table};
 use crossbeam_channel::Sender;
 
 #[derive(Clone,)]
@@ -13,12 +13,20 @@ impl<T> LuaChannel<T> {
             sender: sender
         }
     }
+
+    pub fn send(&self, message: T) -> Result<()> {
+
+        Ok(())
+    }
 }
 
 impl<T> UserData for LuaChannel<T> {
     fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_method("send", |_, channel, ()| {
+        methods.add_method("send", |_, channel, table| {
+            // channel.send()
             Ok(())
         });
     }
 }
+
+struct EventFromLua(Table);
