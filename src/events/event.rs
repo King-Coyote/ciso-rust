@@ -4,6 +4,7 @@ use rlua::{Table, Result, Error};
 pub enum Event {
     Input(SFEvent),
     CreateGui(u32), // an id that counts up
+    WidgetChanged(u32), 
 }
 
 pub fn event_from_lua(t: Table) -> Result<Event> {

@@ -6,6 +6,7 @@ mod game;
 mod scripting;
 mod util;
 mod macros;
+mod error;
 
 extern crate sfml;
 extern crate rlua;
@@ -57,8 +58,7 @@ fn main() -> Result<()> {
 
     safe_context!(scripting, |ctx| -> Result<()> {
         ctx.load(r#"
-            Gui:add_widget({type = 'PANEL', size = {100, 45}, position = {40, 40}})
-            Gui:add_widget({type = 'PANEL', size = {100, 45}, position = {40, 140}})
+            local durr = Gui:add_widget({type = 'PANEL', size = {100, 45}, position = {40, 40}})
         "#).exec()?;
         Ok(())
     }).unwrap();
