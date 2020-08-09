@@ -19,7 +19,7 @@ use rendering::{Renderer};
 use resources::ResourceManager;
 use game::Game;
 use gui::Gui;
-use scripting::{Scripting, LuaChannel,};
+use scripting::{Scripting, LuaChannel, eval_lua_file};
 use sfml::window::Style;
 use sfml::graphics::RenderWindow;
 use util::*;
@@ -55,13 +55,6 @@ fn main() -> Result<()> {
 
     drop(event_tx);
     drop(event_rx);
-
-    safe_context!(scripting, |ctx| -> Result<()> {
-        ctx.load(r#"
-            local durr = Gui:add_widget({type = 'PANEL', size = {100, 45}, position = {40, 40}})
-        "#).exec()?;
-        Ok(())
-    }).unwrap();
     
     while window.is_open() {
         let dt = Instant::now().duration_since(elapsed).as_secs_f32();

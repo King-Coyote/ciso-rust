@@ -1,6 +1,8 @@
 use std::sync::{Arc, Mutex,};
 use rlua::{FromLua, Result, Table, Value, Error as LuaError};
 use crate::error::Error;
+use std::env;
+use std::path::{Path, PathBuf,};
 
 pub type Shared<T> = Arc<Mutex<T>>;
 
@@ -27,4 +29,10 @@ pub fn wrap_error_for_lua(error: Error) -> Result<()> {
     Err(LuaError::ExternalError(
         Arc::new(error)
     ))
+}
+
+pub fn get_asset_path<P: AsRef<Path>>(p: P) -> PathBuf {
+    env::current_dir().unwrap()
+        .join("assets")
+        .join(p)
 }

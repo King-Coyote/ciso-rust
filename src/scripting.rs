@@ -1,4 +1,4 @@
-pub use self::scripting::{Scripting,};
+pub use self::scripting::{Scripting, eval_lua_file};
 mod scripting;
 
 pub use self::lua_channel::LuaChannel;
