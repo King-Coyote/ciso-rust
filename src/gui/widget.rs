@@ -17,7 +17,7 @@ pub trait Widget
     fn close(&mut self);
 }
 
-pub fn build_widget(t: &Table, id: u32) -> Result<Box<dyn Widget>> {
+pub fn build_widget(t: Table, id: u32) -> Result<Box<dyn Widget>> {
     let widget_type: String = t.get("type")?;
     match &widget_type[..] {
         "PANEL" => {
@@ -31,7 +31,7 @@ pub fn build_widget(t: &Table, id: u32) -> Result<Box<dyn Widget>> {
     }
 }
 
-fn build_panel(t: &Table, id: u32) -> Result<Box<dyn Widget>> {
+fn build_panel(t: Table, id: u32) -> Result<Box<dyn Widget>> {
     let size = table_to_pair(t.get("size")?)?;
     let position = table_to_pair(t.get("position")?)?;
     Ok(Box::new(Panel::new(size, position, id)))

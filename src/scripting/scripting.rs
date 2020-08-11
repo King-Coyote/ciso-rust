@@ -44,6 +44,15 @@ pub fn eval_lua_file<'lua, P, R>(ctx: &Context<'lua>, path: P) -> Result<R>
     }
 }
 
+// do eval but don't worry about return value
+pub fn exec_lua_file<'lua, P>(ctx: &Context<'lua>, path: P) -> Result<()> 
+    where 
+        P: AsRef<Path>,
+{
+    eval_lua_file::<_, ()>(ctx, path)?;
+    Ok(())
+}
+
 fn setup_event_channel(event_tx: LuaChannel, scripting: &Scripting) -> Result<()> {
     scripting.lua.context(|ctx| {
         ctx.globals().set("EventChannel", event_tx)?;

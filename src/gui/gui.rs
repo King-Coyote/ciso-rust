@@ -9,7 +9,7 @@ use crate::{
 };
 #[macro_use]
 use crate::safe_context;
-use rlua::{Table, Result, Lua, Context, Error as LuaError};
+use rlua::{Table, Result, Lua, Context, Value, Error as LuaError};
 use crossbeam_channel::Receiver;
 
 pub struct Gui {
@@ -85,7 +85,7 @@ impl Gui {
             root_widgets.push(widget);
             Ok(())            
         }) {
-            Err(err) => println!("Failed to create widget: \n{}", err),
+            Err(err) => println!("Failed to create widget at gui level: \n{}", err),
             _ => {}
         }
     }

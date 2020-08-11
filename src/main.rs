@@ -19,7 +19,7 @@ use rendering::{Renderer};
 use resources::ResourceManager;
 use game::Game;
 use gui::Gui;
-use scripting::{Scripting, LuaChannel, eval_lua_file};
+use scripting::*;
 use sfml::window::Style;
 use sfml::graphics::RenderWindow;
 use util::*;
@@ -55,6 +55,11 @@ fn main() -> Result<()> {
 
     drop(event_tx);
     drop(event_rx);
+
+    safe_context!(scripting, |ctx| -> Result<()> {
+        exec_lua_file(&ctx, "scripts/widget_event_test.lua")?;
+        Ok(())
+    }).expect("Could not run lua file.");
     
     while window.is_open() {
         let dt = Instant::now().duration_since(elapsed).as_secs_f32();

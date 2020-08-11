@@ -3,6 +3,8 @@ use sfml::window::{
     mouse::Button,
 };
 use sfml::graphics::{FloatRect,};
+use std::collections::HashMap;
+use rlua::Function;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug,)]
 pub enum WidgetState {

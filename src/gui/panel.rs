@@ -55,6 +55,10 @@ impl<'s> Panel<'s> {
     pub fn add_child(&mut self, panel: Box<Panel<'static>>) {
         self.children.push(panel);
     }
+
+    pub fn from_table(t: &Table) -> Self {
+
+    }
 }
 
 impl<'s> Widget for Panel<'s>
