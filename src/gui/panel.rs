@@ -12,8 +12,8 @@ use sfml::graphics::{
 };
 use crate::rendering::*;
 use sfml::window::Event as SFEvent;
-
 use sfml::system::{Vector2f,};
+use rlua::Table;
 
 pub struct Panel<'s> {
     shape: RectangleShape<'s>,
@@ -56,9 +56,9 @@ impl<'s> Panel<'s> {
         self.children.push(panel);
     }
 
-    pub fn from_table(t: &Table) -> Self {
+    // pub fn from_table(t: &Table) -> Self {
 
-    }
+    // }
 }
 
 impl<'s> Widget for Panel<'s>

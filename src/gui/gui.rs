@@ -81,7 +81,7 @@ impl Gui {
                 .get::<&str, Table>("Gui")?
                 .get::<&str, Table>("widgets")?
                 .get::<u32, Table>(id)?;
-            let widget = build_widget(&widget_table, id)?;
+            let widget = build_widget(widget_table, id)?;
             root_widgets.push(widget);
             Ok(())            
         }) {
