@@ -1,8 +1,12 @@
-use crate::gui::{
-    Widget, 
-    WidgetStateHandler,
-    WidgetState,
-    StyleMap,
+use crate::{
+    gui::{
+        Widget, 
+        WidgetStateHandler,
+        WidgetState,
+        StyleMap,
+    },
+    rendering::*,
+    util::*,
 };
 use sfml::graphics::{
     RectangleShape, 
@@ -13,7 +17,7 @@ use sfml::graphics::{
 use crate::rendering::*;
 use sfml::window::Event as SFEvent;
 use sfml::system::{Vector2f,};
-use rlua::Table;
+use rlua::{Table, Result,};
 
 pub struct Panel<'s> {
     shape: RectangleShape<'s>,
@@ -24,19 +28,9 @@ pub struct Panel<'s> {
 }
 
 impl<'s> Panel<'s> {
-    /// Create a new panel
-    /// # Arguments
-    /// 
-    /// * 'size' 
-    /// * 'pos'
-    /// * 'id'
-    pub fn new<S: Into<Vector2f>>(size: S, pos: S, id: u32) -> Panel<'s> {
-        let mut panel_shape = RectangleShape::new();
-        panel_shape.set_size(size);
-        panel_shape.set_position(pos);
-        panel_shape.set_fill_color(Color::WHITE);
+    pub fn new(id: u32) -> Panel<'s> {
         let panel = Panel {
-            shape: panel_shape,
+            shape: RectangleShape::new(),
             state: WidgetStateHandler::new(),
             styles: StyleMap::new(),
             children: vec![],
@@ -51,14 +45,25 @@ impl<'s> Panel<'s> {
         }
     }
 
+    pub fn set_properties(&mut self, properties: &Table) -> Result<()> {
+        self.shape.set_size(lua_get_pair(properties, "size")?);
+        self.shape.set_position(lua_get_pair(properties, "position")?);
+        self.state.set_properties(&properties)?;
+        Ok(())
+    }
+
     // probably delete this later dude
     pub fn add_child(&mut self, panel: Box<Panel<'static>>) {
         self.children.push(panel);
     }
 
-    // pub fn from_table(t: &Table) -> Self {
-
-    // }
+    pub fn from_table(t: Table) -> Result<Self> {
+        let id: u32 = t.get("id")?;
+        let properties: Table = t.get("properties")?;
+        let mut panel = Panel::new(id);
+        panel.set_properties(&properties)?;
+        Ok(panel)
+    }
 }
 
 impl<'s> Widget for Panel<'s>

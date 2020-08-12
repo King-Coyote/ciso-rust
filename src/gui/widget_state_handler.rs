@@ -4,7 +4,7 @@ use sfml::window::{
 };
 use sfml::graphics::{FloatRect,};
 use std::collections::HashMap;
-use rlua::Function;
+use rlua::{Function, Result, Table,};
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug,)]
 pub enum WidgetState {
@@ -120,6 +120,11 @@ impl WidgetStateHandler {
             return Some(new_state);
         }
         return None;
+    }
+
+    pub fn set_properties(&mut self, properties: &Table) -> Result<()> {
+        
+        Ok(())
     }
 
 }
