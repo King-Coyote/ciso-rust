@@ -47,11 +47,22 @@ impl Gui {
     }
 
     pub fn draw(&mut self, dt: f32, renderer: &mut Renderer) {
+        let mut closed_widgets = false;
         self.root_widgets.retain(|w| {
             w.update(dt);
             w.draw(dt, renderer);
-            !w.is_closed()
+            if w.is_closed() {
+                closed_widgets = true;
+                return false;
+            }
+            true
         });
+        if closed_widgets {
+            let lua = &self.scripting.lock().unwrap().lua;
+            lua.context(|ctx| {
+                ctx.expire_registry_values();
+            });
+        }
     }
 
     fn handle_event(&mut self, event: Event) {
@@ -96,7 +107,6 @@ impl Gui {
             for widget in root_widgets {
                 widget.widget_changed(&ctx, id, &new_props_table)?;
             }
-            println!("Widget with id {} changed", id);
             Ok(())
         })?;
         Ok(())
