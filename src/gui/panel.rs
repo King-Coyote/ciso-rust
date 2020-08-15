@@ -34,7 +34,7 @@ impl<'s> Panel<'s> {
         let id: u32 = widget_table.get("id")?;
         let mut panel = Panel {
             shape: RectangleShape::new(),
-            state: WidgetStateHandler::new(ctx, properties.clone())?,
+            state: WidgetStateHandler::new(ctx, widget_table)?,
             styles: StyleMap::new(),
             children: vec![],
             id: id

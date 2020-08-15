@@ -29,19 +29,20 @@ pub struct WidgetStateHandler {
     pub closed: bool,
     pub hidden: bool,
     pub state: WidgetState,
-    props_table_key: RegistryKey,
+    widget_table_key: RegistryKey,
 }
 
 impl WidgetStateHandler {
-    pub fn new<'lua>(ctx: &Context<'lua>, props: Table<'lua>) -> Result<WidgetStateHandler> {
-        let key = ctx.create_registry_value(props.clone())?;
+    pub fn new<'lua>(ctx: &Context<'lua>, widget_table: Table<'lua>) -> Result<WidgetStateHandler> {
+        let properties: Table = widget_table.get("properties")?;
+        let key = ctx.create_registry_value(widget_table)?;
         let mut widget_state_handler = WidgetStateHandler {
             closed: false,
             hidden: false,
-            props_table_key: key,
+            widget_table_key: key,
             state: WidgetState::Enabled,
         };
-        widget_state_handler.set_properties(ctx, props)?;
+        widget_state_handler.set_properties(ctx, properties)?;
         Ok(widget_state_handler)
     }
 
@@ -82,9 +83,10 @@ impl WidgetStateHandler {
         new_props.get::<_, bool>("hidden").map(|b| self.hidden = b).ok();
 
         // update this table
-        let current_props: Table = ctx.registry_value(&self.props_table_key)?;
+        let current_props: Table = ctx
+            .registry_value::<Table>(&self.widget_table_key)?
+            .get("properties")?;
         lua_spread_tables(&current_props, new_props)?;
-
         Ok(())
     }
 
@@ -149,9 +151,12 @@ impl WidgetStateHandler {
     }
 
     fn fire_lua_event<'lua, A: ToLuaMulti<'lua>>(&self, ctx: &Context<'lua>, name: &str, args: A) -> Result<()> {
-        let properties: Table = ctx.registry_value(&self.props_table_key)?;
-        if let Ok(func) = properties.get::<_, Table>("event_handlers")?.get::<_, Function>(name) {
-            func.call::<_, ()>((properties, args))?;
+        let widget_table: Table = ctx.registry_value(&self.widget_table_key)?;
+        let properties: Table = widget_table.get("properties")?;
+        if let Ok(handlers) = properties.get::<_, Table>("event_handlers") {
+            if let Ok(func) = handlers.get::<_, Function>(name) {
+                func.call::<_, ()>((widget_table, args))?;
+            }
         }
         Ok(())
     }
