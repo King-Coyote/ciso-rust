@@ -8,7 +8,7 @@ use crate::{
     error::Error,
 };
 #[macro_use]
-use crate::safe_context;
+use crate::{safe_context, widget_table};
 use rlua::{Table, Result, Lua, Context, Value, Error as LuaError};
 use crossbeam_channel::Receiver;
 
@@ -76,11 +76,7 @@ impl Gui {
     fn handle_event_create(&mut self, id: u32) {
         let root_widgets = &mut self.root_widgets;
         match safe_context!(self.scripting, |ctx| -> Result<()> {
-            let globals = ctx.globals();
-            let widget_table: Table = globals
-                .get::<&str, Table>("Gui")?
-                .get::<&str, Table>("widgets")?
-                .get::<u32, Table>(id)?;
+            let widget_table: Table = widget_table!(ctx, id);
             let widget = build_widget(widget_table)?;
             root_widgets.push(widget);
             Ok(())            
@@ -90,7 +86,17 @@ impl Gui {
         }
     }
 
-    fn handle_event_widget_changed(&self, id: u32) {
+    fn handle_event_widget_changed(&mut self, id: u32) {
+        let root_widgets = &mut self.root_widgets;
+        if let Err(err) = safe_context!(self.scripting, |ctx| -> Result<()> {
+            let new_props_table: Table = widget_table!(ctx, id);
+            for widget in root_widgets {
+                widget.widget_changed(id, &new_props_table);
+            }
+            Ok(())
+        }) {
+            println!("Couldn't get widget table for change event: {}", err);
+        };
         println!("Widget with id {} changed", id);
     }
 }

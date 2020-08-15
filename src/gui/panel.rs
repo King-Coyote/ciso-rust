@@ -46,8 +46,8 @@ impl<'s> Panel<'s> {
     }
 
     pub fn set_properties(&mut self, properties: &Table) -> Result<()> {
-        self.shape.set_size(lua_get_pair(properties, "size")?);
-        self.shape.set_position(lua_get_pair(properties, "position")?);
+        lua_get_pair(properties, "size").map(|v| self.shape.set_size(v)).ok();
+        lua_get_pair(properties, "position").map(|v| self.shape.set_position(v)).ok();
         self.state.set_properties(&properties)?;
         Ok(())
     }
@@ -89,6 +89,19 @@ impl<'s> Widget for Panel<'s>
             sf_event
         ) {
             self.update_state(new_state);
+        }
+    }
+
+    fn widget_changed(&mut self, id: u32, table: &Table) {
+        if id == self.id {
+            if let Err(err) = self.set_properties(table) {
+                println!("Could not set properties at id {}: {}", id, err);
+            }
+        } else {
+            let children = &mut self.children;
+            for child in children {
+                child.widget_changed(id, table);
+            }
         }
     }
 

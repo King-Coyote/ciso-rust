@@ -13,6 +13,7 @@ pub trait Widget
     fn draw(&self, dt: f32, renderer: &mut Renderer);
     fn update(&self, dt: f32);
     fn handle_input(&mut self, handled: &mut bool, sf_event: &SFEvent);
+    fn widget_changed(&mut self, id: u32, table: &Table);
     fn is_closed(&self) -> bool;
     fn close(&mut self);
 }

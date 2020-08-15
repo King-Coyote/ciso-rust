@@ -10,3 +10,7 @@ local panel = Gui:add_widget{
         end
     }
 }
+
+panel:set_properties{
+    position = {0,0}
+}

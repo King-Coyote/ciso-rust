@@ -49,3 +49,11 @@ pub fn get_asset_path<P: AsRef<Path>>(p: P) -> PathBuf {
         .join("assets")
         .join(p)
 }
+
+// pub fn unwrap_table_into_props<'lua, T, L, F>(table: &Table<'lua>, relations: &[(L, F)])
+//     where
+//         L: Fn() -> Result<Rz>,
+//         F: Fn(T)
+// {
+
+// }
