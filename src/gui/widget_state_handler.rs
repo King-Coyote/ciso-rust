@@ -94,7 +94,10 @@ impl WidgetStateHandler {
             WidgetState::Hovered => {
                 new_state = Some(WidgetState::Clicked)
             },
-            _ => {}
+            _ => {
+                self.fire_lua_event(ctx, "onUnClick", (0, x, y))
+                    .unwrap_or_else(|e| println!("Failed to fire onUnClick event: {}", e));
+            }
         }
         new_state
     }
