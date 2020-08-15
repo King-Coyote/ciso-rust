@@ -61,7 +61,6 @@ impl Gui {
             let lua = &self.scripting.lock().unwrap().lua;
             lua.context(|ctx| {
                 ctx.expire_registry_values();
-                lua.gc_collect().unwrap();
             });
         }
     }
