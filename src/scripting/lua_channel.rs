@@ -31,8 +31,8 @@ impl LuaChannel {
 
 impl UserData for LuaChannel {
     fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_method("send", |_, channel, table: Table| {
-            channel.send(event_from_lua(table)?)?;
+        methods.add_method("send", |ctx, channel, table: Table| {
+            channel.send(event_from_lua(&ctx, table)?)?;
             Ok(())
         });
     }

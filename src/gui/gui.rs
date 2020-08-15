@@ -9,7 +9,7 @@ use crate::{
 };
 #[macro_use]
 use crate::{safe_context, widget_table};
-use rlua::{Table, Result, Lua, Context, Value, Error as LuaError};
+use rlua::{Table, Result, Lua, Context, Value, Error as LuaError, RegistryKey,};
 use crossbeam_channel::Receiver;
 
 pub struct Gui {
@@ -56,28 +56,31 @@ impl Gui {
 
     fn handle_event(&mut self, event: Event) {
         match event {
-            Event::CreateGui(id) => self.handle_event_create(id),
+            Event::CreateGui(key) => self.handle_event_create(key),
             Event::Input(sf_event) => {
                 let mut handled = false;
                 for widget in self.root_widgets.iter_mut() {
                     if handled {
                         break;
                     }
-                    widget.handle_input(&mut handled, &sf_event);
+                    safe_context!(self.scripting, |ctx| {
+                        widget.handle_input(&ctx, &mut handled, &sf_event);
+                    })
                 }
             }
-            Event::WidgetChanged(id) => {
-                self.handle_event_widget_changed(id);
+            Event::WidgetChanged(id, key) => {
+                if let Err(err) = self.handle_event_widget_changed(id, key) {
+                    println!("Failed to change widget {}: {}", id, err);
+                }
             },
             _ => {},
         }
     }
 
-    fn handle_event_create(&mut self, id: u32) {
+    fn handle_event_create(&mut self, key: RegistryKey) {
         let root_widgets = &mut self.root_widgets;
         match safe_context!(self.scripting, |ctx| -> Result<()> {
-            let widget_table: Table = widget_table!(ctx, id);
-            let widget = build_widget(widget_table)?;
+            let widget = build_widget(&ctx, key)?;
             root_widgets.push(widget);
             Ok(())            
         }) {
@@ -86,18 +89,17 @@ impl Gui {
         }
     }
 
-    fn handle_event_widget_changed(&mut self, id: u32) {
+    fn handle_event_widget_changed(&mut self, id: u32, key: RegistryKey) -> Result<()> {
         let root_widgets = &mut self.root_widgets;
-        if let Err(err) = safe_context!(self.scripting, |ctx| -> Result<()> {
-            let new_props_table: Table = widget_table!(ctx, id);
+        safe_context!(self.scripting, |ctx| {
+            let new_props_table: Table = ctx.registry_value(&key)?;
             for widget in root_widgets {
-                widget.widget_changed(id, &new_props_table);
+                widget.widget_changed(&ctx, id, &new_props_table)?;
             }
+            println!("Widget with id {} changed", id);
             Ok(())
-        }) {
-            println!("Couldn't get widget table for change event: {}", err);
-        };
-        println!("Widget with id {} changed", id);
+        })?;
+        Ok(())
     }
 }
 
@@ -105,23 +107,18 @@ fn lua_preamble(scripting: &Shared<Scripting>) -> Result<()> {
     safe_context!(scripting, |ctx| {
         let gui_table = ctx.create_table()?;
         gui_table.set("num_widgets", 1)?;
-        gui_table.set("widgets", ctx.create_table()?)?;
-
         create_widget_metatable(&ctx)?;
 
         let lua_add_widget = ctx.create_function(|ctx, (this, t): (Table, Table)| {
-            let num: u32 = this.raw_get("num_widgets")?;
-            t.raw_set("id", num)?;
+            let num_widgets: u32 = this.get("num_widgets")?;
+            t.set("id", num_widgets + 1);
             // give the table the widget metatable
             t.set_metatable(ctx.globals().get("Widget_MT")?);
-            // add the actual widget info to the widgets table
-            this.get::<&str, Table>("widgets")?
-                .set(num, t.clone())?;
+            let key = ctx.create_registry_value(t.clone())?;
             // send an event telling rust that the widget has been made
             ctx.globals().get::<&str, LuaChannel>("EventChannel")?
-                .send(Event::CreateGui(num))?;
-            this.raw_set("num_widgets", num + 1)?;
-            
+                .send(Event::CreateGui(key))?;
+            this.set("num_widgets", num_widgets + 1)?;
             Ok(t)
         })?;
         gui_table.set("add_widget", lua_add_widget)?;
@@ -134,18 +131,16 @@ fn lua_preamble(scripting: &Shared<Scripting>) -> Result<()> {
 
 fn create_widget_metatable(ctx: &Context) -> Result<()> {
     let widget_mt = ctx.create_table()?;
+
+    // set up functions callable on widget tables
     widget_mt.set("set_properties", ctx.create_function(|ctx, (this, new_props): (Table, Table)| {
-        // TODO can generalise this into a has-invalid-args type situation
-        if new_props.contains_key("id")? {
-            // TODO cover with tests
-            return wrap_error_for_lua(Error::InvalidArgs("Cannot include 'id' in set_properties.".to_owned()))
-        }
         let id: u32 = this.get("id")?;
-        lua_spread_tables(&this, new_props)?;
+        let props_key = ctx.create_registry_value(new_props)?;
         ctx.globals().get::<_, LuaChannel>("EventChannel")?
-            .send(Event::WidgetChanged(id))?;
+            .send(Event::WidgetChanged(id, props_key))?;
         Ok(())
     })?)?;
+
     widget_mt.set("__index", widget_mt.clone())?;
     ctx.globals().set("Widget_MT", widget_mt)?;
     Ok(())

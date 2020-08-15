@@ -11,6 +11,7 @@ use rlua::{
     RegistryKey,
     Context,
     ToLuaMulti,
+    Value,
 };
 use crate::util::*;
 use crate::error::Error;
@@ -28,19 +29,20 @@ pub struct WidgetStateHandler {
     pub closed: bool,
     pub hidden: bool,
     pub state: WidgetState,
-    state_table_key: RegistryKey,
-    event_map: HashMap<String, RegistryKey>,
+    props_table_key: RegistryKey,
 }
 
 impl WidgetStateHandler {
-    pub fn new(ctx: &Context, r: RegistryKey) -> WidgetStateHandler {
-        WidgetStateHandler {
+    pub fn new<'lua>(ctx: &Context<'lua>, props: Table<'lua>) -> Result<WidgetStateHandler> {
+        let key = ctx.create_registry_value(props.clone())?;
+        let mut widget_state_handler = WidgetStateHandler {
             closed: false,
             hidden: false,
-            state_table_key: r,
+            props_table_key: key,
             state: WidgetState::Enabled,
-            event_map: HashMap::new(),
-        }
+        };
+        widget_state_handler.set_properties(ctx, props)?;
+        Ok(widget_state_handler)
     }
 
     pub fn handle_state (
@@ -73,8 +75,16 @@ impl WidgetStateHandler {
         None
     }
 
-    pub fn set_properties(&mut self, properties: &Table) -> Result<()> {
-        
+    pub fn set_properties<'lua>(&mut self, ctx: &Context<'lua>, new_props: Table<'lua>) -> Result<()> {
+
+        // first update from the table
+        new_props.get::<_, bool>("closed").map(|b| self.closed = b).ok();
+        new_props.get::<_, bool>("hidden").map(|b| self.hidden = b).ok();
+
+        // update this table
+        let current_props: Table = ctx.registry_value(&self.props_table_key)?;
+        lua_spread_tables(&current_props, new_props)?;
+
         Ok(())
     }
 
@@ -93,7 +103,8 @@ impl WidgetStateHandler {
         let mut new_state = None;
         match &self.state {
             WidgetState::Clicked => {
-                self.fire_lua_event(ctx, "onClick", (0, x, y));
+                self.fire_lua_event(ctx, "onClick", (0, x, y))
+                    .unwrap_or_else(|e| println!("Failed to fire onClick event: {}", e));
                 new_state = Some(WidgetState::Hovered);
             },
             _ => {}
@@ -134,15 +145,12 @@ impl WidgetStateHandler {
         None
     }
 
-
     fn fire_lua_event<'lua, A: ToLuaMulti<'lua>>(&self, ctx: &Context<'lua>, name: &str, args: A) -> Result<()> {
-        if let Some(key) = self.event_map.get(name) {
-            let func: Function = ctx.registry_value(key)?;
-            let this: Table = ctx.registry_value(&self.state_table_key)?;
-            func.call::<_, ()>((this, args))?;
-            return Ok(());
+        let properties: Table = ctx.registry_value(&self.props_table_key)?;
+        if let Ok(func) = properties.get::<_, Table>("event_handlers")?.get::<_, Function>(name) {
+            func.call::<_, ()>((properties, args))?;
         }
-        wrap_error_for_lua(Error::FunctionNotFound(name.to_owned()))
+        Ok(())
     }
 
     fn some_if_new_state(&mut self, new_state: WidgetState) -> Option<WidgetState> {

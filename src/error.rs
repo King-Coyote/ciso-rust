@@ -15,6 +15,9 @@ impl fmt::Display for Error {
             Error::InvalidArgs(ref reason) => {
                 write!(f, "{}", reason)
             },
+            Error::FunctionNotFound(ref func_name) => {
+                write!(f, "Function with name {} not found.", func_name)
+            }
         }
     }
 }

@@ -6,23 +6,24 @@ use crate::{
     },
 };
 use sfml::window::Event as SFEvent;
-use rlua::{Table, Result, Error};
+use rlua::{Table, Result, Error, Context, RegistryKey};
 
 pub trait Widget
 {
     fn draw(&self, dt: f32, renderer: &mut Renderer);
     fn update(&self, dt: f32);
-    fn handle_input(&mut self, handled: &mut bool, sf_event: &SFEvent);
-    fn widget_changed(&mut self, id: u32, table: &Table);
+    fn handle_input(&mut self, ctx: &Context, handled: &mut bool, sf_event: &SFEvent);
+    fn widget_changed<'lua>(&mut self, ctx: &Context<'lua>, id: u32, new_props: &Table<'lua>) -> Result<()>;
     fn is_closed(&self) -> bool;
     fn close(&mut self);
 }
 
-pub fn build_widget(t: Table) -> Result<Box<dyn Widget>> {
-    let widget_type: String = t.get("type")?;
+pub fn build_widget(ctx: &Context, key: RegistryKey) -> Result<Box<dyn Widget>> {
+    let widget_table: Table = ctx.registry_value(&key)?;
+    let widget_type: String = widget_table.get("type")?;
     match &widget_type[..] {
         "PANEL" => {
-            build_panel(t)
+            build_panel(ctx, widget_table)
         },
         _ => Err(Error::FromLuaConversionError{
             from: "Table",
@@ -32,8 +33,8 @@ pub fn build_widget(t: Table) -> Result<Box<dyn Widget>> {
     }
 }
 
-fn build_panel(t: Table) -> Result<Box<dyn Widget>> {
-    Ok(Box::new(Panel::from_table(t)?))
+fn build_panel<'lua>(ctx: &Context<'lua>, t: Table<'lua>) -> Result<Box<dyn Widget>> {
+    Ok(Box::new(Panel::new(ctx, t)?))
 }
 
 // pub struct WidgetBuilder;

@@ -17,7 +17,7 @@ use sfml::graphics::{
 use crate::rendering::*;
 use sfml::window::Event as SFEvent;
 use sfml::system::{Vector2f,};
-use rlua::{Table, Result,};
+use rlua::{Table, Result, Context, RegistryKey};
 
 pub struct Panel<'s> {
     shape: RectangleShape<'s>,
@@ -28,15 +28,19 @@ pub struct Panel<'s> {
 }
 
 impl<'s> Panel<'s> {
-    pub fn new(id: u32) -> Panel<'s> {
-        let panel = Panel {
+
+    pub fn new<'lua>(ctx: &Context<'lua>, widget_table: Table<'lua>) -> Result<Self> {
+        let properties: Table = widget_table.get("properties")?;
+        let id: u32 = widget_table.get("id")?;
+        let mut panel = Panel {
             shape: RectangleShape::new(),
-            state: WidgetStateHandler::new(),
+            state: WidgetStateHandler::new(ctx, properties.clone())?,
             styles: StyleMap::new(),
             children: vec![],
             id: id
         };
-        panel
+        panel.set_properties(ctx, &properties)?;
+        Ok(panel)
     }
 
     fn update_state(&mut self, new_state: WidgetState) {
@@ -45,10 +49,10 @@ impl<'s> Panel<'s> {
         }
     }
 
-    pub fn set_properties(&mut self, properties: &Table) -> Result<()> {
-        lua_get_pair(properties, "size").map(|v| self.shape.set_size(v)).ok();
-        lua_get_pair(properties, "position").map(|v| self.shape.set_position(v)).ok();
-        self.state.set_properties(&properties)?;
+    pub fn set_properties<'lua>(&mut self, ctx: &Context<'lua>, new_props: &Table<'lua>) -> Result<()> {
+        lua_get_pair(new_props, "size").map(|v| self.shape.set_size(v)).ok();
+        lua_get_pair(new_props, "position").map(|v| self.shape.set_position(v)).ok();
+        self.state.set_properties(ctx, new_props.clone())?;
         Ok(())
     }
 
@@ -57,13 +61,7 @@ impl<'s> Panel<'s> {
         self.children.push(panel);
     }
 
-    pub fn from_table(t: Table) -> Result<Self> {
-        let id: u32 = t.get("id")?;
-        let properties: Table = t.get("properties")?;
-        let mut panel = Panel::new(id);
-        panel.set_properties(&properties)?;
-        Ok(panel)
-    }
+
 }
 
 impl<'s> Widget for Panel<'s>
@@ -79,30 +77,30 @@ impl<'s> Widget for Panel<'s>
 
     }
 
-    fn handle_input(&mut self, handled: &mut bool, sf_event: &SFEvent) {
+    fn handle_input(&mut self, ctx: &Context, handled: &mut bool, sf_event: &SFEvent) {
         for child in self.children.iter_mut() {
-            child.handle_input(handled, sf_event);
+            child.handle_input(ctx, handled, sf_event);
         }
         if let Some(new_state) = self.state.handle_state(
             &self.shape.global_bounds(),
             handled,
-            sf_event
+            sf_event,
+            ctx,
         ) {
             self.update_state(new_state);
         }
     }
 
-    fn widget_changed(&mut self, id: u32, table: &Table) {
+    fn widget_changed<'lua>(&mut self, ctx: &Context<'lua>, id: u32, new_props: &Table<'lua>) -> Result<()> {
         if id == self.id {
-            if let Err(err) = self.set_properties(table) {
-                println!("Could not set properties at id {}: {}", id, err);
-            }
+            self.set_properties(ctx, new_props)?;
         } else {
             let children = &mut self.children;
             for child in children {
-                child.widget_changed(id, table);
+                child.widget_changed(ctx, id, new_props)?;
             }
         }
+        Ok(())
     }
 
     fn is_closed(&self) -> bool {
