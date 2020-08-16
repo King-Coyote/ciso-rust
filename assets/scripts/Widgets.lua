@@ -27,39 +27,38 @@ local textStyle = {
 
 local Widgets = {}
 
-Widgets.Button = function(_size, _position, _string, _id, _style)
+Widgets.Button = function(_size, _position, _string, _style)
 
     local _style = _style or defaultStyle
 
-    local button = {
-        type = 'button',
-        id = _id,
-        style = _style,
-        properties = {
-            position = _position,
-            size = _size,
-            handleOnClick = function(self, x, y, mouseButton)
-                print('durrrr')
-            end
-        },
-    }
-
+    -- will eventually be text
     local text = {
-        type = 'text',
-        id = _id .. '_text',
-        style = textStyle,
-        font = 'DejaVuSans.ttf',
+        type = 'PANEL',
         properties = {
+            style = textStyle,
             string = _string,
             fontSize = 16,
-            position = _position,
+            position = {0,0},
+            size = {30,30}
         }
     }
 
-    Gui:render{
-        button,
-        text
+    local panel = {
+        type = 'PANEL',
+        children = {text},
+        properties = {
+            style = _style,
+            position = _position,
+            size = _size,
+            event_handlers = {
+                onClick = function(self, button, x, y)
+
+                end,
+            },
+        },
     }
+
+    Gui:add_widget(panel)
 
 end
 

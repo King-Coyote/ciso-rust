@@ -1,5 +1,5 @@
 use rlua::prelude::*;
-use rlua::{Result, Error, Chunk, Context};
+use rlua::{Result, Error, Context, Table,};
 use crate::LuaChannel;
 use std::path::Path;
 use std::fs;
@@ -50,6 +50,19 @@ pub fn exec_lua_file<'lua, P>(ctx: &Context<'lua>, path: P) -> Result<()>
         P: AsRef<Path>,
 {
     eval_lua_file::<_, ()>(ctx, path)?;
+    Ok(())
+}
+
+pub fn setup_module_path<P: AsRef<Path>>(ctx: &Context, path: P) -> Result<()> {
+    let package_table: Table = ctx.globals().get("package")?;
+    let lua_path_str: String = package_table.get("path")?;
+    let full_path = util::get_asset_path("scripts/lua_libs").join(path);
+    // this fails silently, but it'll fail later on anyway with a pretty obvious message about msising modules
+    if let Some(full_path_as_str) = full_path.to_str() {
+        let new_path = format!("{};{}/?.lua", lua_path_str, full_path_as_str);
+        package_table.set("path", new_path)?;
+    }
+    let durr_deleteme: String = package_table.get("path")?;
     Ok(())
 }
 

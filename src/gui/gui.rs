@@ -4,7 +4,8 @@ use crate::{
     rendering::*,
     util::*,
     resources::ResourceManager,
-    scripting::{Scripting, LuaChannel,},
+    scripting::{LuaChannel, Scripting,},
+    scripting,
     error::Error,
 };
 #[macro_use]
@@ -115,6 +116,7 @@ impl Gui {
 
 fn lua_preamble(scripting: &Shared<Scripting>) -> Result<()> {
     safe_context!(scripting, |ctx| {
+        scripting::setup_module_path(&ctx, "gui")?;
         let gui_table = ctx.create_table()?;
         gui_table.set("num_widgets", 1)?;
         create_widget_metatable(&ctx)?;
