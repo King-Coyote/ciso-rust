@@ -28,6 +28,7 @@ pub enum WidgetState {
 pub struct WidgetStateHandler {
     pub closed: bool,
     pub hidden: bool,
+    pub transparent: bool,
     pub state: WidgetState,
     widget_table_key: RegistryKey,
 }
@@ -39,6 +40,7 @@ impl WidgetStateHandler {
         let mut widget_state_handler = WidgetStateHandler {
             closed: false,
             hidden: false,
+            transparent: false,
             widget_table_key: key,
             state: WidgetState::Enabled,
         };
@@ -53,6 +55,9 @@ impl WidgetStateHandler {
         sf_event: &SFEvent,
         ctx: &Context,
     ) -> Option<WidgetState> {
+        if self.transparent {
+            return None
+        }
         if let Some(new_state) = match *sf_event {
             SFEvent::MouseButtonPressed {button, x, y} => {
                 self.handle_mouse_pressed(ctx, handled, button, x, y, bounds)
@@ -81,6 +86,7 @@ impl WidgetStateHandler {
         // first update from the table
         new_props.get::<_, bool>("closed").map(|b| self.closed = b).ok();
         new_props.get::<_, bool>("hidden").map(|b| self.hidden = b).ok();
+        new_props.get::<_, bool>("transparent").map(|b| self.transparent = b).ok();
 
         // update this table
         let current_props: Table = ctx

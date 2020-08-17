@@ -12,13 +12,11 @@ use crate::{
 use sfml::graphics::{
     RectangleShape, 
     Transformable, 
-    Color,
     Shape,
 };
 use crate::rendering::*;
 use sfml::{
     window::Event as SFEvent,
-    graphics::{Transform,},
 };
 use rlua::{Table, Result, Context, Value};
 
