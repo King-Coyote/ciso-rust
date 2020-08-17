@@ -92,7 +92,8 @@ impl Gui {
     fn handle_event_create(&mut self, key: RegistryKey) {
         let root_widgets = &mut self.root_widgets;
         match safe_context!(self.scripting, |ctx| -> Result<()> {
-            let widget = build_widget(&ctx, key)?;
+            let widget_table = ctx.registry_value(&key)?;
+            let widget = build_widget(&ctx, widget_table)?;
             root_widgets.push(widget);
             Ok(())            
         }) {
@@ -118,19 +119,15 @@ fn lua_preamble(scripting: &Shared<Scripting>) -> Result<()> {
     safe_context!(scripting, |ctx| {
         scripting::setup_module_path(&ctx, "gui")?;
         let gui_table = ctx.create_table()?;
-        gui_table.set("num_widgets", 1)?;
         create_widget_metatable(&ctx)?;
 
-        let lua_add_widget = ctx.create_function(|ctx, (this, t): (Table, Table)| {
-            let num_widgets: u32 = this.get("num_widgets")?;
-            t.set("id", num_widgets + 1);
+        let lua_add_widget = ctx.create_function(|ctx, (_, t): (Table, Table)| {
             // give the table the widget metatable
             t.set_metatable(ctx.globals().get("Widget_MT")?);
             let key = ctx.create_registry_value(t.clone())?;
             // send an event telling rust that the widget has been made
             ctx.globals().get::<&str, LuaChannel>("EventChannel")?
                 .send(Event::CreateGui(key))?;
-            this.set("num_widgets", num_widgets + 1)?;
             Ok(t)
         })?;
         gui_table.set("add_widget", lua_add_widget)?;

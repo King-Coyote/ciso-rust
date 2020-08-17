@@ -4,9 +4,10 @@ use crate::{
         WidgetStateHandler,
         WidgetState,
         StyleMap,
+        widget,
     },
     rendering::*,
-    util::*,
+    util,
 };
 use sfml::graphics::{
     RectangleShape, 
@@ -15,9 +16,11 @@ use sfml::graphics::{
     Shape,
 };
 use crate::rendering::*;
-use sfml::window::Event as SFEvent;
-use sfml::system::{Vector2f,};
-use rlua::{Table, Result, Context, RegistryKey};
+use sfml::{
+    window::Event as SFEvent,
+    graphics::{Transform,},
+};
+use rlua::{Table, Result, Context, Value};
 
 pub struct Panel<'s> {
     shape: RectangleShape<'s>,
@@ -34,11 +37,18 @@ impl<'s> Panel<'s> {
         let id: u32 = widget_table.get("id")?;
         let mut panel = Panel {
             shape: RectangleShape::new(),
-            state: WidgetStateHandler::new(ctx, widget_table)?,
+            state: WidgetStateHandler::new(ctx, widget_table.clone())?,
             styles: StyleMap::new(),
             children: vec![],
             id: id
         };
+        if let Ok(children_table) = widget_table.get::<_, Table>("children") {
+            for pair in children_table.pairs::<Value, Table>() {
+                let (_, child) = pair?;
+                child.set("parent", widget_table.clone())?;
+                panel.children.push(widget::build_widget(ctx, child)?);
+            }
+        }
         panel.set_properties(ctx, &properties)?;
         Ok(panel)
     }
@@ -50,17 +60,15 @@ impl<'s> Panel<'s> {
     }
 
     pub fn set_properties<'lua>(&mut self, ctx: &Context<'lua>, new_props: &Table<'lua>) -> Result<()> {
-        lua_get_pair(new_props, "size").map(|v| self.shape.set_size(v)).ok();
-        lua_get_pair(new_props, "position").map(|v| self.shape.set_position(v)).ok();
+        util::lua_get_pair(new_props, "size").map(|v| self.shape.set_size(v)).ok();
+        util::lua_get_pair(new_props, "position").map(|v: (f32, f32)| {
+            let current_pos = self.shape.position();
+            let delta: (f32, f32) = (v.0 - current_pos.x, v.1 - current_pos.y);
+            self.translate(delta);
+        }).ok();
         self.state.set_properties(ctx, new_props.clone())?;
         Ok(())
     }
-
-    // probably delete this later dude
-    pub fn add_child(&mut self, panel: Box<Panel<'static>>) {
-        self.children.push(panel);
-    }
-
 
 }
 
@@ -103,12 +111,16 @@ impl<'s> Widget for Panel<'s>
         Ok(())
     }
 
-    fn is_closed(&self) -> bool {
-        self.state.closed
+    // combines transform with all children's transforms
+    fn translate(&mut self, delta: (f32, f32)) {
+        self.shape.move_(delta);
+        for child in self.children.iter_mut() {
+            child.translate(delta);
+        }
     }
 
-    fn close(&mut self) {
-        self.state.closed = true;
+    fn is_closed(&self) -> bool {
+        self.state.closed
     }
 
 }
