@@ -1,27 +1,27 @@
 local defaultStyle = {
     enabled = {
-        bgColor = {50,50,50,255},
-        fgColor = {255,255,255,255}
+        bg_color = {50,50,50,255},
+        fg_color = {255,255,255,255}
     },
-    hover = {
-        bgColor = {75,85,100,255},
-        fgColor = {255,255,255,255}
+    hovered = {
+        bg_color = {75,85,100,255},
+        fg_color = {255,255,255,255}
     },
     clicked = {
-        bgColor = {95, 115, 120,255},
-        fgColor = {255,255,255,255}
+        bg_color = {95, 115, 120,255},
+        fg_color = {255,255,255,255}
     },
 }
 
 local textStyle = {
     enabled = {
-        fgColor = {150,150,150,255}
+        fg_color = {150,150,150,255}
     },
-    hover = {
-        fgColor = {255,255,255,255}
+    hovered = {
+        fg_color = {255,255,255,255}
     },
     clicked = {
-        fgColor = {255,255,255,255}
+        fg_color = {255,255,255,255}
     },
 }
 

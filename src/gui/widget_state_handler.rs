@@ -18,6 +18,7 @@ use crate::error::Error;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug,)]
 pub enum WidgetState {
+    Null, // for defaulting in style map
     Disabled,
     Enabled,
     Hovered,

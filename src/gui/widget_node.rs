@@ -25,7 +25,7 @@ static mut ID: AtomicU32 = AtomicU32::new(0);
 pub struct WidgetNode {
     id: u32,
     widget: Box<dyn Widget>,
-    state: WidgetStateHandler,
+    state_handler: WidgetStateHandler,
     children: Vec<WidgetNode>,
     styles: StyleMap,
 }
@@ -34,15 +34,18 @@ impl WidgetNode {
 
     pub fn new<'lua>(ctx: &Context<'lua>, widget_table: Table<'lua>) -> Result<Self> {
         let properties: Table = widget_table.get("properties")?;
-        let mut id: u32 = 0;
+        let style_table: Table = properties.get("style")?;
+
+        let mut id: u32;
         unsafe {id = ID.fetch_add(1, Ordering::Relaxed);}
         widget_table.set("id", id)?;
+
         let mut node = WidgetNode {
             id: id,
             widget: widget::build_widget(ctx, &widget_table)?,
-            state: WidgetStateHandler::new(ctx, &widget_table)?,
+            state_handler: WidgetStateHandler::new(ctx, &widget_table)?,
             children: vec![],
-            styles: StyleMap::new(),
+            styles: StyleMap::new(&style_table),
         };
         if let Ok(children_table) = widget_table.get::<_, Table>("children") {
             for pair in children_table.pairs::<Value, Table>() {
@@ -52,6 +55,8 @@ impl WidgetNode {
             }
         }
         node.set_properties(ctx, &properties)?;
+        let style = node.styles.get_style(&node.state_handler.state);
+        node.widget.update_style(&node.styles.get_style(&node.state_handler.state));
         Ok(node)
     }
 
@@ -70,15 +75,13 @@ impl WidgetNode {
         for child in self.children.iter_mut() {
             child.handle_input(ctx, handled, sf_event);
         }
-        if let Some(new_state) = self.state.handle_state(
+        if let Some(new_state) = self.state_handler.handle_state(
             &self.widget.get_bounds(),
             handled,
             sf_event,
             ctx,
         ) {
-            if let Some(style) = self.styles.get_style(&new_state) {
-                self.widget.update_style(style);
-            }
+            self.widget.update_style(self.styles.get_style(&new_state));
         }
     }
 
@@ -94,7 +97,7 @@ impl WidgetNode {
     }
 
     pub fn is_closed(&self) -> bool {
-        self.state.closed
+        self.state_handler.closed
     }
 
     // position is done here because children need to be updated relative to parent - hence the 
@@ -105,7 +108,7 @@ impl WidgetNode {
             self.translate(delta);
         }).ok();
         self.widget.set_properties(ctx, new_props);
-        self.state.set_properties(ctx, new_props.clone())?;
+        self.state_handler.set_properties(ctx, new_props.clone())?;
         Ok(())
     }
 

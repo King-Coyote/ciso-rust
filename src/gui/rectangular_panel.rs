@@ -41,7 +41,7 @@ impl<'s> Widget for RectangularPanel<'s> {
     }
 
     fn update_style(&mut self, style: &Style) {
-        self.shape.set_fill_color(style.background_color);
+        self.shape.set_fill_color(style.bg_color);
     }
 
     fn set_properties(&mut self, ctx: &Context, new_props: &Table) {
