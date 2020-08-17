@@ -34,9 +34,9 @@ pub struct WidgetStateHandler {
 }
 
 impl WidgetStateHandler {
-    pub fn new<'lua>(ctx: &Context<'lua>, widget_table: Table<'lua>) -> Result<WidgetStateHandler> {
+    pub fn new<'lua>(ctx: &Context<'lua>, widget_table: &Table<'lua>) -> Result<WidgetStateHandler> {
         let properties: Table = widget_table.get("properties")?;
-        let key = ctx.create_registry_value(widget_table)?;
+        let key = ctx.create_registry_value(widget_table.clone())?;
         let mut widget_state_handler = WidgetStateHandler {
             closed: false,
             hidden: false,

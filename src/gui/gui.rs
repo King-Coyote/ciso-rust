@@ -1,6 +1,6 @@
 use crate::{
     events::*,
-    gui::{Widget, build_widget,},
+    gui::{Widget, build_widget, WidgetNode},
     rendering::*,
     util::*,
     resources::ResourceManager,
@@ -16,7 +16,7 @@ use crossbeam_channel::Receiver;
 pub struct Gui {
     scripting: Shared<Scripting>,
     event_rx: Receiver<Event>,
-    root_widgets: Vec<Box<dyn Widget>>,
+    root_nodes: Vec<WidgetNode>,
     resource_manager: Shared<ResourceManager>,
 }
 
@@ -30,7 +30,7 @@ impl Gui {
         let mut gui = Gui {
             scripting: scripting,
             event_rx: event_rx,
-            root_widgets: vec!(),
+            root_nodes: vec!(),
             resource_manager: resource_manager
         };
         return gui;
@@ -49,7 +49,7 @@ impl Gui {
 
     pub fn draw(&mut self, dt: f32, renderer: &mut Renderer) {
         let mut closed_widgets = false;
-        self.root_widgets.retain(|w| {
+        self.root_nodes.retain(|w| {
             w.update(dt);
             w.draw(dt, renderer);
             if w.is_closed() {
@@ -71,17 +71,17 @@ impl Gui {
             Event::CreateGui(key) => self.handle_event_create(key),
             Event::Input(sf_event) => {
                 let mut handled = false;
-                for widget in self.root_widgets.iter_mut() {
+                for node in self.root_nodes.iter_mut() {
                     if handled {
                         break;
                     }
                     safe_context!(self.scripting, |ctx| {
-                        widget.handle_input(&ctx, &mut handled, &sf_event);
+                        node.handle_input(&ctx, &mut handled, &sf_event);
                     })
                 }
             }
             Event::WidgetChanged(id, key) => {
-                if let Err(err) = self.handle_event_widget_changed(id, key) {
+                if let Err(err) = self.handle_event_properties_changed(id, key) {
                     println!("Failed to change widget {}: {}", id, err);
                 }
             },
@@ -90,11 +90,10 @@ impl Gui {
     }
 
     fn handle_event_create(&mut self, key: RegistryKey) {
-        let root_widgets = &mut self.root_widgets;
+        let root_nodes = &mut self.root_nodes;
         match safe_context!(self.scripting, |ctx| -> Result<()> {
             let widget_table = ctx.registry_value(&key)?;
-            let widget = build_widget(&ctx, widget_table)?;
-            root_widgets.push(widget);
+            root_nodes.push(WidgetNode::new(&ctx, widget_table)?);
             Ok(())            
         }) {
             Err(err) => println!("Failed to create widget at gui level: \n{}", err),
@@ -102,12 +101,12 @@ impl Gui {
         }
     }
 
-    fn handle_event_widget_changed(&mut self, id: u32, key: RegistryKey) -> Result<()> {
-        let root_widgets = &mut self.root_widgets;
+    fn handle_event_properties_changed(&mut self, id: u32, key: RegistryKey) -> Result<()> {
+        let root_nodes = &mut self.root_nodes;
         safe_context!(self.scripting, |ctx| {
             let new_props_table: Table = ctx.registry_value(&key)?;
-            for widget in root_widgets {
-                widget.widget_changed(&ctx, id, &new_props_table)?;
+            for node in root_nodes {
+                node.properties_changed(&ctx, id, &new_props_table)?;
             }
             Ok(())
         })?;

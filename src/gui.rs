@@ -4,8 +4,14 @@ mod gui;
 pub use self::widget::{Widget, build_widget,};
 mod widget;
 
-pub use self::panel::Panel;
-mod panel;
+// pub use self::panel::Panel;
+// mod panel;
+
+pub use self::rectangular_panel::RectangularPanel;
+mod rectangular_panel;
+
+pub use self::widget_node::WidgetNode;
+mod widget_node;
 
 pub use self::widget_state_handler::{
     WidgetStateHandler,

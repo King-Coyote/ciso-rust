@@ -57,7 +57,7 @@ fn main() -> Result<()> {
     drop(event_rx);
 
     safe_context!(scripting, |ctx| -> Result<()> {
-        exec_lua_file(&ctx, "scripts/widget_event_test.lua")?;
+        exec_lua_file(&ctx, "scripts/child_widget_test.lua")?;
         Ok(())
     }).expect("Could not run lua file.");
     
